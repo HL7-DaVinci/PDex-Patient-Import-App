@@ -53,8 +53,10 @@
 			<el-form-item v-for="(values, key) in records">
 				<el-table :data="values" @selection-change="onSelect($event, key)">
 					<el-table-column type="selection" width="55"></el-table-column>
+					<!--
 					<el-table-column property="id" label="ID"></el-table-column>
-					<el-table-column property="display" :label="key"></el-table-column>
+					-->
+					<el-table-column property="display" label="{{key|display}}"></el-table-column>
 				</el-table>
 			</el-form-item>
 			<el-form-item>
@@ -154,6 +156,9 @@
 				}).finally(() => {
 					this.loading = false;
 				});
+			},
+			filters: {
+				display: (value) => value.split(".").pop()
 			},
 			methods: {
 				onSelect(values, key) {
