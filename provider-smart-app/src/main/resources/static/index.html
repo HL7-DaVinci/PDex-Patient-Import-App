@@ -168,9 +168,10 @@
 					}
 
 					const payerServerUrl = this.payerServerUrl;
+					const patientId = this.patientId;
 
 					this.loading = true;
-					axios.post(`/import-records?${qs({payerServerUrl})}`, data).then(response => {
+					axios.post(`/import-records?${qs({payerServerUrl, patientId})}`, data).then(response => {
 						console.debug(response.data);
 						router.push("/");
 					}).catch(error => {
@@ -181,7 +182,6 @@
 				}
 			}
 		});
-
 
 		var hlxSmartForm = Vue.component("hlx-smart-form", {
 			template: "#hlx-smart-form",
