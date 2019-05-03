@@ -31,11 +31,11 @@
 							<el-input v-model="context.practitioner.name" :readonly="true"></el-input>
 						</el-form-item>
 						<el-form-item label="Coverage">
-							<el-select v-model="context.coverage">
+							<el-select v-model="context.coverageId">
 								<el-option
 									v-for="coverage in context.coverages"
 									:label="coverage.payorName"
-									:value="coverage"></el-option>
+									:value="coverage.id"></el-option>
 							</el-select>
 						</el-form-item>
 						<el-form-item>
@@ -57,7 +57,7 @@
 		const PAYER_SERVER_URL = "https://api-v8-r4.hspconsortium.org/healthlxr4test/open";
 
 		function qs(query = {}) {
-			return Object.entries(query).map(q => q.join("=")).join("&");
+			return Object.entries(query).map(q => q[1] ? q.join("=") : null).filter(Boolean).join("&");
 		}
 
 		new Vue({
@@ -66,26 +66,27 @@
 				context: {
 					patient: {},
 					practitioner: {},
-					encounter: {},
-					coverage: {},
+					encounterId: null,
+					coverageId: null,
 					coverages: []
 				},
 				card: null
 			},
 			created() {
-				axios.get("/current-context").then(data => {
-					this.context = data;
+				axios.get("/current-context").then(response => {
+					console.debug (response.data);
+					this.context = response.data;
 				}).catch(error => console.error(error));
 			},
 			methods: {
 				onSubmit() {
 					const patientId = this.context.patient.id;
 					const practitionerId = this.context.practitioner.id;
-					const encounterId = this.context.encounter.id;
-					const coverageId = this.context.coverage.id;
+					const encounterId = this.context.encounterId;
+					const coverageId = this.context.coverageId;
 
-					axios.post(`/call-hook?${qs({patientId, practitionerId, encounterId, coverageId})}`, this.context).then(data => {
-						this.card = data.cards[0];
+					axios.post(`/call-hook?${qs({patientId, practitionerId, encounterId, coverageId})}`, this.context).then(response => {
+						this.card = response.data.cards[0];
 					}).catch(error => console.error(error));
 				}
 			}
