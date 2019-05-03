@@ -3,6 +3,21 @@ PDex Payer Data Exchange Reference Implementation
 
 Da Vinci reference implementation for the Payer Data Exchange use case. More details about use case (Scenario 1) here: https://confluence.hl7.org/display/DVP/PDex+Reference+Implementation
 
+# Implementation Details
+Implementation follows the use case described in the documentation to prove the following functionality:
+1. OAuth2 Authorization for a Provider Smart App.
+2. Delegation of an OAuth token to a CDS-Hooks service via a CDS-Hook request.
+3. Patient Matching
+4. Querying of Patient data from a Payer system
+5. Import Data selection
+6. Persistance of Patient data via a Capability Statement
+7. Storing unsupported record data as a DocumentReference
+
+Some functionality is out of scope in this implementation but might be implemented in the nearest future:
+1. Provider App needs a FHIR Server URL and Application ID at a start time. We are using spring-security-oauth2-autoconfigure plugin and did not focus on extending the default functionality much, since that was enough for a proof of concept.
+2. Provider and Payer FHIR Servers follow the R4 spec only.
+3. CDS-Hooks Service can connect to a Payer FHIR Server only through an open endpoint.
+
 # Sources
 This is a Maven multi-module project with two Spring-Boot Applications: Provider Smart App and Payer CDS-Hooks Service.
 ### Build
