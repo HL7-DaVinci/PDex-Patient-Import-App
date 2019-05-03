@@ -49,11 +49,15 @@
 		</el-form>
 	</template>
 	<template id="hlx-import-form">
-		<el-table :data="records[0]">
-			<el-table-column type="selection" width="55"></el-table-column>
-			<el-table-column property="id" label="ID"></el-table-column>
-			<el-table-column property="display" label="Procedure"></el-table-column>
-		</el-table>
+		<el-form>
+			<el-form-item v-for="list in records">
+				<el-table :data="list">
+					<el-table-column type="selection" width="55"></el-table-column>
+					<el-table-column property="id" label="ID"></el-table-column>
+					<el-table-column property="display" label="Description"></el-table-column>
+				</el-table>
+			</el-form-item>
+		</el-form>
 	</template>
 	<template id="hlx-smart-form">
 		<hlx-import-form v-if="payerServerUrl && subscriberId && patientId"
@@ -121,7 +125,7 @@
 			props: ["payerServerUrl", "subscriberId", "patientId"],
 			data() {
 				return {
-					records: []
+					records: {}
 				}
 			},
 			mounted() {
@@ -130,7 +134,7 @@
 				const patientId = this.patientId;
 
 				axios.get(`/get-payer-records?${qs({payerServerUrl, subscriberId, patientId})}`, this.records).then(response => {
-					this.records = response.data[Object.keys(response.data)[0]];
+					this.records = response.data;
 				}).catch(error => console.error(error));
 			},
 		});
