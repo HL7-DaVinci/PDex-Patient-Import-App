@@ -35,18 +35,18 @@
 			<el-form-item>
 				<el-button type="primary" @click="onSubmit">Submit</el-button>
 			</el-form-item>
+			<el-card v-if="card">
+				{{card.summary}}
+				<template v-if="card.source">
+					<hr>
+					Source: <a :href="card.source.url">{{card.source.label}}</a>						
+				</template>
+				<template v-for="link in card.links">
+					<hr>
+					<a :href="link.url">{{link.label}}</a>
+				</template>
+			</el-card>
 		</el-form>
-		<el-card v-if="card">
-			{{card.summary}}
-			<template v-if="card.source">
-				<hr>
-				Source: <a :href="card.source.url">{{card.source.label}}</a>						
-			</template>
-			<template v-for="link in card.links">
-				<hr>
-				<a :href="link.url">{{link.label}}</a>
-			</template>
-		</el-card>
 	</template>
 	<template id="hlx-import-form">
 		<el-table :data="records[0]">
@@ -86,7 +86,6 @@
 			template: "#hlx-patient-form",
 			data() {
 				return {
-					import: false,
 					context: {
 						patient: {},
 						practitioner: {},
