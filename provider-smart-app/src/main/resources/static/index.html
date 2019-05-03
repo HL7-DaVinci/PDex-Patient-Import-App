@@ -83,8 +83,6 @@
 		Vue.use(VueRouter);
 		ELEMENT.locale(ELEMENT.lang.en);
 
-		const PAYER_SERVER_URL = "https://api-v8-r4.hspconsortium.org/healthlxr4test/open";
-
 		function qs(query = {}) {
 			return Object.entries(query).map(q => q[1] ? q.join("=") : null).filter(Boolean).join("&");
 		}
