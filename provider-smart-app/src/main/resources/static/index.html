@@ -125,7 +125,11 @@
 				}
 			},
 			mounted() {
-				axios.post(`/get-payer-records?${qs({payerServerUrl, subscriberId, patientId})}`, this.records).then(response => {
+				const payerServerUrl = this.payerServerUrl;
+				const subscriberId = this.subscriberId;
+				const patientId = this.patientId;
+
+				axios.get(`/get-payer-records?${qs({payerServerUrl, subscriberId, patientId})}`, this.records).then(response => {
 					this.records = response.data[Object.keys(response.data)[0]];
 				}).catch(error => console.error(error));
 			},
