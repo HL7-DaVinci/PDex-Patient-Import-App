@@ -50,11 +50,11 @@
 	</template>
 	<template id="hlx-import-form">
 		<el-form>
-			<el-form-item v-for="list in records">
-				<el-table :data="list">
+			<el-form-item v-for="(values, key) in records">
+				<el-table :data="values" @selection-change="select($event, key)">
 					<el-table-column type="selection" width="55"></el-table-column>
 					<el-table-column property="id" label="ID"></el-table-column>
-					<el-table-column property="display" label="Description"></el-table-column>
+					<el-table-column property="display" :label="key"></el-table-column>
 				</el-table>
 			</el-form-item>
 		</el-form>
@@ -125,7 +125,8 @@
 			props: ["payerServerUrl", "subscriberId", "patientId"],
 			data() {
 				return {
-					records: {}
+					records: {},
+					selected: {}
 				}
 			},
 			mounted() {
@@ -137,6 +138,11 @@
 					this.records = response.data;
 				}).catch(error => console.error(error));
 			},
+			methods: {
+				select(values, key) {
+					this.selected[key] = values;
+				}
+			}
 		});
 
 
