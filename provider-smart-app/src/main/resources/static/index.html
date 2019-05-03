@@ -18,7 +18,7 @@
 <body>
 	<el-container id="app" width="320px">
 		<el-header>
-			<el-image src="healthlx-logo.png" alt="HealthLX" style="height: 22px"></el-image>
+			<el-image src="healthlx-logo.png" alt="HealthLX"></el-image>
 		</el-header>
 		<el-main>
 			<el-row type="flex" justify="center">
@@ -44,8 +44,14 @@
 					</el-form>
 					<el-card v-if="card">
 						{{card.summary}}
-						<hr>
-						Source: <a :href="card.source.url">{{card.source.label}}</a>
+						<template v-if="card.source">
+							<hr>
+							Source: <a :href="card.source.url">{{card.source.label}}</a>						
+						</template>
+						<template v-for="link in card.links">
+							<hr>
+							<a :href="link.url">{{link.label}}</a>
+						</template>
 					</el-card>
 				</el-col>
 			</el-row>
