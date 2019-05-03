@@ -48,6 +48,6 @@ export PAYER_FHIR_SERVER_URI=another value
 docker-compose up  --detach payer-cds-hooks-service
 ```
 # Try it
-* Run a Scenario:
+* **Run a Scenario**:
 Go to DaVinciPDexProvider Sandbox at https://sandbox.hspconsortium.org/DaVinciPDexProvider and launch an app RI-Provider-Smart-App in the Apps section.
-* Play with a CDS Hook Discovery service at: https://payer-cds-hooks-service.herokuapp.com/cds-services. Currently a single service is available: **smart-appointment-hook**
+* **Play with CDS Hook services** at: https://payer-cds-hooks-service.herokuapp.com/cds-services. Currently a single service is available: **smart-appointment-hook**
