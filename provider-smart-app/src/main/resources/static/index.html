@@ -36,14 +36,12 @@
 				<el-button type="primary" @click="onSubmit">Submit</el-button>
 			</el-form-item>
 			<el-card v-if="card">
-				{{card.summary}}
+				<pre slot="header">{{card.summary}}</pre>
 				<template v-if="card.source">
-					<hr>
-					Source: <a :href="card.source.url">{{card.source.label}}</a>						
+					<br>Source: <el-link type="primary" :href="card.source.url">{{card.source.label}}</el-link>
 				</template>
 				<template v-for="link in card.links">
-					<hr>
-					<a :href="link.url">{{link.label}}</a>
+					<br><el-link type="primary" :href="link.url">{{link.label}}</el-link>
 				</template>
 			</el-card>
 		</el-form>
@@ -56,7 +54,7 @@
 					<!--
 					<el-table-column property="id" label="ID"></el-table-column>
 					-->
-					<el-table-column property="display" label="{{key|display}}"></el-table-column>
+					<el-table-column property="display" :label="key | display"></el-table-column>
 				</el-table>
 			</el-form-item>
 			<el-form-item>
