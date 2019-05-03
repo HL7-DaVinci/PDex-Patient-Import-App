@@ -18,13 +18,26 @@ Sources are built from [this GitHub repository](https://github.com/HL7-DaVinci/P
 
 ### Docker
 Both apps can be easilly deployed in a Docker container.
-Provider application configuratons and run:
+Provide Payer CDS-Hooks Service configuration:
 ```sh
-export PAYER_FHIR_SERVER_URI=...
-export PATIENT_DATA_IMPORT_SMART_APP_URI=...
+export PAYER_FHIR-SERVER-URI: ...
+export PATIENT-DATA-IMPORT_SMART-APP-URI: ...
+```
+* **PAYER_FHIR-SERVER-URI**: FHIR server open endpoint for payer data
+* **PATIENT-DATA-IMPORT_SMART-APP-URI**: Link to Provider Smart App for Data Import returned in a CDS Hook Card
+
+Provide Provider Smart App configuration:
+```sh
 export PROVIDER_FHIR_SERVER_URI=...
 export PAYER_CDS_HOOK_URI=...
 export SECURITY_OAUTH2_CLIENT_CLIENT_ID=..
+```
+* **PROVIDER_FHIR_SERVER_URI**: FHIR server secured endpoint for Patient data
+* **PATIENT-PAYER_CDS_HOOK_URI**: CDS Hook Service URI
+* **PATIENT-SECURITY_OAUTH2_CLIENT_CLIENT_ID**: App client ID from HSPC Sandbox
+
+To start run the following command:
+```sh
 docker-compose up --build
 ```
 `--detach` is optional
