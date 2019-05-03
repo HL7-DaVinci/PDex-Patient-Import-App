@@ -38,10 +38,10 @@
 			<el-card v-if="card">
 				<pre slot="header">{{card.summary}}</pre>
 				<template v-if="card.source">
-					<br>Source: <el-link type="primary" :href="card.source.url">{{card.source.label}}</el-link>
+					Source: <el-link type="primary" :href="card.source.url">{{card.source.label}}</el-link>
 				</template>
 				<template v-for="link in card.links">
-					<br><el-link type="primary" :href="link.url">{{link.label}}</el-link>
+					<el-link type="primary" :href="link.url">{{link.label}}</el-link>
 				</template>
 			</el-card>
 		</el-form>
@@ -51,9 +51,6 @@
 			<el-form-item v-for="(values, key) in records">
 				<el-table :data="values" @selection-change="onSelect($event, key)">
 					<el-table-column type="selection" width="55"></el-table-column>
-					<!--
-					<el-table-column property="id" label="ID"></el-table-column>
-					-->
 					<el-table-column property="display" :label="key | display"></el-table-column>
 				</el-table>
 			</el-form-item>
@@ -107,7 +104,10 @@
 				axios.get("/current-context").then(response => {
 					this.context = response.data;
 				}).catch(error => {
-					console.error(error);
+					this.$notify.error({
+						title: "Error",
+						message: error.response.data.message
+					});
 				}).finally(() => {
 					this.loading = false;
 				});
@@ -123,7 +123,10 @@
 					axios.post(`/call-hook?${qs({patientId, practitionerId, encounterId, coverageId})}`, this.context).then(response => {
 						this.card = response.data.cards[0];
 					}).catch(error => {
-						console.error(error);
+						this.$notify.error({
+							title: "Error",
+							message: error.response.data.message
+						});
 					}).finally(() => {
 						this.loading = false;
 					});
@@ -150,7 +153,11 @@
 				axios.get(`/get-payer-records?${qs({payerServerUrl, subscriberId, patientId})}`, this.records).then(response => {
 					this.records = response.data;
 				}).catch(error => {
-					console.error(error);
+					}).catch(error => {
+						this.$notify.error({
+							title: "Error",
+							message: error.response.data.message
+						});
 				}).finally(() => {
 					this.loading = false;
 				});
@@ -172,11 +179,13 @@
 					const patientId = this.patientId;
 
 					this.loading = true;
-					axios.post(`/import-records?${qs({payerServerUrl, patientId})}`, data).then(response => {
-						console.debug(response.data);
+					axios.post(`/import-records?${qs({payerServerUrl, patientId})}`, data).then(() => {
 						router.push("/");
 					}).catch(error => {
-						console.error(error);
+						this.$notify.error({
+							title: "Error",
+							message: error.response.data.message
+						});
 					}).finally(() => {
 						this.loading = false;
 					});
