@@ -2,11 +2,11 @@ package com.healthlx.demo.pdex2019.cdshooks.model;
 
 public class Link {
 
-  private String label = null;
+  private String label;
 
-  private String url = null;
+  private String url;
 
-  private String type = null;
+  private String type;
 
   public String getLabel() {
     return label;
