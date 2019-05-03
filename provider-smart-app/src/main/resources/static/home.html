@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <link rel="stylesheet" href="includes/bootstrap/css/bootstrap.min.css"/>
+    <script src="scripts/load_stuff.js"></script>
+
+	<script>
+		function loadAll() {
+			loadProviders();
+		}
+	</script>
+    <title>BCI MAMD Demo</title>
+  </head>
+  <body style="margin-left: 100px" onLoad="loadAll()">
+	<div class="row" style="height: 40px;"></div>
+	
+	<div class="row" style="border: 10px solid #e0e0e0; border-radius: 20px; padding: 20px; width: 818px">
+		<div class="row" style="width: 768px; text-align: center">
+			<div class="col-sm-6" style="text-align: left"><img src="images/logo-bci-big.png" style="height: 50px; width: 300px; object-fit: cover; margin-left: -20px"/></div>
+			<div class="col-sm-6" style="text-align: right;"><img src="images/logo-hlx-small.png" style="height: 20px; margin-right: -20px"/><br/>
+			<button class="btn btn-outline-secondary btn-sm" style="margin-top:20px; margin-right: -20px" onClick="location.href='index.html'">logout</button>
+			</div>
+		</div>
+		<div class="row" style="height: 40px;"></div>
+		
+		<div class="card" style="margin-top: 20px">
+		  <h5 class="card-title bg-primary" style="height:40px; padding-top:7px; padding-left: 20px; color: white">BCI Member Details</h5>
+		  <div class="card-body">
+			<table class="table table-striped table-sm" style="width: 720px">
+			    <tbody>
+			      <tr>
+			        <td>Member ID</td>
+			        <td>WT0123456789</td>
+			      </tr>
+			      <tr>
+			        <td>Firstname</td>
+			        <td>William</td>
+			      </tr>
+			      <tr>
+			        <td>Last Name</td>
+			        <td>Tesch</td>
+			      </tr>
+			      <tr>
+			        <td>Address</td>
+			        <td>1350 14th Ave</td>
+			      </tr>
+			      <tr>
+			        <td>City</td>
+			        <td>Grafton</td>
+			      </tr>
+			      <tr>
+			        <td>Zipcode</td>
+			        <td>53024</td>
+			      </tr>
+			      <tr>
+			        <td>State</td>
+			        <td>WI</td>
+			      </tr>
+			      <tr>
+			        <td>Primary Telephone</td>
+			        <td>(877) 987-7728</td>
+			      </tr>
+			    </tbody>
+			  </table>
+		  </div>
+		</div>
+		
+		<div class="card" style="margin-top: 20px">
+		  <h5 class="card-title bg-primary" style="height:40px; padding-top:7px; padding-left: 20px; color: white">Connected Providers</h5>
+		  <div class="card-body">
+			<table class="table table-striped table-sm" style="width: 720px">
+				<thead style="background-color: #e0e0e0; font-weight: bold">
+					<tr>
+						<td>Provider Name</td>
+						<td>User Name</td>
+						<td style="text-align: right">Options</td>
+					</tr>
+				</thead>
+			    <tbody>
+			      <tr>
+			        <td>Cerner Demo Account</td>
+			        <td>wilma_smart</td>
+			        <td style="text-align: right"><button type="button" class="btn btn-outline-secondary btn-sm">Edit</button>&nbsp;<button type="button" class="btn btn-outline-primary btn-sm">Show</button></td>
+			      </tr>
+			      <tr>
+			        <td>Epic Demo Account</td>
+			        <td>fhirjason</td>
+			        <td style="text-align: right"><button type="button" class="btn btn-outline-secondary btn-sm">Edit</button>&nbsp;<button type="button" onclick="location.href='clinical-epic.html'" class="btn btn-outline-primary btn-sm">Show</button></td>
+			      </tr>
+			      <tr>
+			        <td>Medicare Demo Account</td>
+			        <td>BBUser29999</td>
+			        <td style="text-align: right"><button type="button" class="btn btn-outline-secondary btn-sm">Edit</button>&nbsp;<button type="button" class="btn btn-outline-primary btn-sm">Show</button></td>
+			      </tr>
+			      <tr>
+			        <td colspan="3" style="text-align: right"><button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#exampleModal">Add Provider</button></td>
+			      </tr>
+			    </tbody>
+			  </table>
+		  </div>
+		</div>
+	</div>
+
+	<!-- 
+	Modal dialog for selecting/showing the complete list of providers.
+	 -->
+	<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-lg" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalLabel">Select From Provider List</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body" style="height: 600px; overflow-y: scroll;">
+			<table class="table table-striped table-sm" style="width: 720px">
+				<thead style="background-color: #e0e0e0; font-weight: bold">
+					<tr>
+						<td style="width: 260px;">Filter Provider List</td>
+						<td><input type="text" id="filterField" onKeyUp="filterProviderList()"/></td>
+					</tr>
+				</thead>
+			    <tbody id="tblProviderList">
+			    </tbody>
+			  </table>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+	        <button type="button" class="btn btn-primary">Add Selected Provider</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+    <script src="includes/jquery/jquery-3.3.1.min.js"></script>
+    <script src="includes/bootstrap/js/bootstrap.min.js"></script>
+  
+</body>
+</html>

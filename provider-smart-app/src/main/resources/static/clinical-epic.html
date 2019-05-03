@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <link rel="stylesheet" href="includes/bootstrap/css/bootstrap.min.css"/>
+    <script src="scripts/load_stuff.js"></script>
+
+	<script>
+		function loadAll() {
+			loadImmunizations();
+			loadMedication();
+			loadEncounters();
+		}
+	</script>
+    
+    <title>BCI MAMD Demo</title>
+  </head>
+  <body style="margin-left: 100px" onLoad="loadAll()">
+	<div class="row" style="height: 40px;"></div>
+	
+	<div class="row" style="border: 10px solid #e0e0e0; border-radius: 20px; padding: 20px; width: 818px">
+		<div class="row" style="width: 768px; text-align: center">
+			<div class="col-sm-6" style="text-align: left"><img src="images/logo-bci-big.png" style="height: 50px; width: 300px; object-fit: cover; margin-left: -20px"/></div>
+			<div class="col-sm-6" style="text-align: right;"><img src="images/logo-hlx-small.png" style="height: 20px; margin-right: -10px"/><br/>
+			<button class="btn btn-outline-secondary btn-sm" style="margin-top:20px; margin-right: -10px" onClick="location.href='home.html'">back</button>
+		</div>
+		<div class="row" style="height: 40px;"></div>
+		
+		<div class="card" style="margin-top: 20px">
+		  <h5 class="card-title bg-primary" style="height:40px; padding-top:7px; padding-left: 20px; color: white;  text-align: left;">Clinical Data for Jason Argonaut</h5>
+		  <div class="card-body">
+		  
+		  	<div style="width: 720px; background-color: DeepSkyBlue; height: 40px; padding-left: 10px; padding-top: 7px; font-weight: bold; text-align: left;">Immunizations</div>
+			<table class="table table-striped table-sm" style="width: 720px">
+				<thead style="background-color: #e0e0e0; font-weight: bold">
+					<tr>
+						<td style="text-align: left">Immunization</td>
+						<td>Not Given</td>
+						<td style="text-align:right">When</td>
+					</tr>
+				</thead>
+			    <tbody id="tblImmu">
+			    </tbody>
+			  </table>
+			  
+		  	<div style="width: 720px; background-color: DeepSkyBlue; height: 40px; padding-left: 10px; padding-top: 7px; font-weight: bold; text-align: left;">Medications</div>
+			<table class="table table-striped table-sm" style="width: 720px">
+				<thead style="background-color: #e0e0e0; font-weight: bold">
+					<tr>
+						<td style="text-align:left">Medication</td>
+						<td style="text-align:right">Method</td>
+					</tr>
+				</thead>
+			    <tbody id="tblMeds">
+			    </tbody>
+			  </table>
+			  
+		  	<div style="width: 720px; background-color: DeepSkyBlue; height: 40px; padding-left: 10px; padding-top: 7px; font-weight: bold; text-align: left;">Encounters</div>
+			<table class="table table-striped table-sm" style="width: 720px">
+				<thead style="background-color: #e0e0e0; font-weight: bold">
+					<tr>
+						<td style="text-align:left">Encounter Start</td>
+						<td style="text-align:right">Status</td>
+					</tr>
+				</thead>
+			    <tbody id="tblEnc">
+			    </tbody>
+			  </table>
+		  </div>
+		</div>
+	</div>
+
+    <script src="includes/jquery/jquery-3.3.1.min.js"></script>
+    <script src="includes/bootstrap/js/bootstrap.min.js"></script>
+  
+</body>
+</html>
