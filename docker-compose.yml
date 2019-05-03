@@ -1,0 +1,47 @@
+version: '3.7'
+services:
+  payer-cds-hooks-service:
+    build: ./payer-cds-hooks-service
+    image: 'hlx/payer-cds-hooks-service:dev'
+    restart: always
+    hostname: payer-cds-hooks-service
+    container_name: payer-cds-hooks-service
+    ports:
+      - 8082:8082
+    networks:
+      - hlx
+    environment:
+      SERVER_PORT: "8082"
+      JAVA_OPTS: '-Xmx256M -Xms128M -XX:MetaspaceSize=256M'
+      PAYER_FHIR-SERVER-URI: ${PAYER_FHIR_SERVER_URI}
+      PATIENT-DATA-IMPORT_SMART-APP-URI: ${PATIENT_DATA_IMPORT_SMART_APP_URI}
+  provider-smart-app:
+    build: ./provider-smart-app
+    image: 'hlx/provider-smart-app:dev'
+    restart: always
+    hostname: provider-smart-app
+    container_name: provider-smart-app
+    ports:
+      - 8443:8443
+    networks:
+      - hlx
+    environment:
+      SERVER_PORT: "8443"
+      JAVA_OPTS: '-Xmx256M -Xms128M -XX:MetaspaceSize=256M'
+      PROVIDER_FHIR-SERVER-URI: ${PROVIDER_FHIR_SERVER_URI}
+      PAYER_CDS-HOOK-URI: ${PAYER_CDS_HOOK_URI}
+      SECURITY_OAUTH2_CLIENT_CLIENT-ID: ${SECURITY_OAUTH2_CLIENT_CLIENT_ID}
+      SECURITY_OAUTH2_CLIENT_ACCESS-TOKEN-URI: "https://auth.hspconsortium.org/token"
+      SECURITY_OAUTH2_CLIENT_USER-AUTHORIZATION-URI: "https://auth.hspconsortium.org/authorize"
+      SECURITY_OAUTH2_RESOURCE_USER-INFO-URL: "https://auth.hspconsortium.org/userinfo"
+      SECURITY_OAUTH2_CLIENT_TOKEN-NAME: "oauth_token"
+      SECURITY_OAUTH2_CLIENT_CLIENT-AUTHENTICATION-SCHEME: "form"
+      SERVER_SSL_KEY-ALIAS: "selfsigned_localhost_sslserver"
+      SERVER_SSL_KEY-PASSWORD: "changeit"
+      SERVER_SSL_KEY-STORE: "classpath:ssl_server.jks"
+      SERVER_SSL_KEY-STORE-PROVIDER: "SUN"
+      SERVER_SSL_KEY-STORE-TYPE: "JKS"
+      SPRING_MAIN_ALLOW-BEAN-DEFENITION-OVERRIDNG: "true"
+networks:
+  hlx:
+    name: hlx-network
