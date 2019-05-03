@@ -17,7 +17,7 @@
 </head>
 <body>
 	<template id="hlx-patient-form">
-		<el-form :model="context" label-width="120px">
+		<el-form v-loading="loading" :model="context" label-width="120px">
 			<el-form-item label="Patient">
 				<el-input v-model="context.patient.name" :readonly="true"></el-input>
 			</el-form-item>
@@ -49,7 +49,7 @@
 		</el-form>
 	</template>
 	<template id="hlx-import-form">
-		<el-form>
+		<el-form v-loading="loading">
 			<el-form-item v-for="(values, key) in records">
 				<el-table :data="values" @selection-change="onSelect($event, key)">
 					<el-table-column type="selection" width="55"></el-table-column>
@@ -93,6 +93,7 @@
 			template: "#hlx-patient-form",
 			data() {
 				return {
+					loading: false,
 					context: {
 						patient: {},
 						practitioner: {},
@@ -104,9 +105,14 @@
 				};
 			},
 			mounted() {
+				this.loading = true;
 				axios.get("/current-context").then(response => {
 					this.context = response.data;
-				}).catch(error => console.error(error));
+				}).catch(error => {
+					console.error(error);
+				}).finally(() => {
+					this.loading = false;
+				});
 			},
 			methods: {
 				onSubmit() {
@@ -115,9 +121,14 @@
 					const encounterId = this.context.encounterId;
 					const coverageId = this.context.coverageId;
 
+					this.loading = true;
 					axios.post(`/call-hook?${qs({patientId, practitionerId, encounterId, coverageId})}`, this.context).then(response => {
 						this.card = response.data.cards[0];
-					}).catch(error => console.error(error));
+					}).catch(error => {
+						console.error(error);
+					}).finally(() => {
+						this.loading = false;
+					});
 				}
 			}
 		});
@@ -127,6 +138,7 @@
 			props: ["payerServerUrl", "subscriberId", "patientId"],
 			data() {
 				return {
+					loading: false,
 					records: {},
 					selected: {}
 				}
@@ -136,9 +148,14 @@
 				const subscriberId = this.subscriberId;
 				const patientId = this.patientId;
 
+				this.loading = true;
 				axios.get(`/get-payer-records?${qs({payerServerUrl, subscriberId, patientId})}`, this.records).then(response => {
 					this.records = response.data;
-				}).catch(error => console.error(error));
+				}).catch(error => {
+					console.error(error);
+				}).finally(() => {
+					this.loading = false;
+				});
 			},
 			methods: {
 				onSelect(values, key) {
@@ -152,10 +169,15 @@
 
 					const payerServerUrl = this.payerServerUrl;
 
+					this.loading = true;
 					axios.post(`/import-records?${qs({payerServerUrl})}`, data).then(response => {
 						console.debug(response.data);
 						router.push("/");
-					}).catch(error => console.error(error));
+					}).catch(error => {
+						console.error(error);
+					}).finally(() => {
+						this.loading = false;
+					});
 				}
 			}
 		});
