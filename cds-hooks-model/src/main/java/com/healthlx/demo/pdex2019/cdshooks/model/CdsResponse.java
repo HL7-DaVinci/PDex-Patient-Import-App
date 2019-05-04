@@ -1,8 +1,13 @@
 package com.healthlx.demo.pdex2019.cdshooks.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
 public class CdsResponse {
 
   /**
@@ -10,27 +15,10 @@ public class CdsResponse {
    * if a user selects them), and links (to launch an app if the user selects them). The EHR decides how to display
    * cards, but we recommend displaying suggestions using buttons, and links using underlined text. REQUIRED
    */
-  private List<Card> cards = null;
+  private List<Card> cards = new ArrayList<>();
 
-  /**
-   * Add a card.
-   * 
-   * @param cardsItem The card.
-   * @return
-   */
   public CdsResponse addCard(Card cardsItem) {
-    if (this.cards == null) {
-      this.cards = new ArrayList<>();
-    }
     this.cards.add(cardsItem);
     return this;
-  }
-
-  public List<Card> getCards() {
-    return cards;
-  }
-
-  public void setCards(List<Card> cards) {
-    this.cards = cards;
   }
 }

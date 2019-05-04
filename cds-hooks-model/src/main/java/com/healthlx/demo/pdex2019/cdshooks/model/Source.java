@@ -1,24 +1,12 @@
 package com.healthlx.demo.pdex2019.cdshooks.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class Source {
 
-  private String label = null;
-
-  private String url = null;
-
-  public String getLabel() {
-    return label;
-  }
-
-  public void setLabel(String label) {
-    this.label = label;
-  }
-
-  public String getUrl() {
-    return url;
-  }
-
-  public void setUrl(String url) {
-    this.url = url;
-  }
+  private String label;
+  private String url;
 }

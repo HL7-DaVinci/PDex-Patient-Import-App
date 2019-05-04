@@ -1,5 +1,9 @@
 package com.healthlx.demo.pdex2019.cdshooks.model;
 
+import com.sun.tools.javac.util.Assert;
+import lombok.Getter;
+
+@Getter
 public class CdsService {
 
   /**
@@ -23,34 +27,12 @@ public class CdsService {
   private String description;
 
   public CdsService(String id, String hook, String name, String description) {
-    if (id == null) {
-      throw new NullPointerException("CDSService id cannot be null");
-    }
-    if (hook == null) {
-      throw new NullPointerException("CDSService hook cannot be null");
-    }
-    if (description == null) {
-      throw new NullPointerException("CDSService description cannot be null");
-    }
+    Assert.checkNonNull(id, "CDSService id cannot be null.");
+    Assert.checkNonNull(hook, "CDSService hook cannot be null.");
+    Assert.checkNonNull(description, "CDSService description cannot be null.");
     this.id = id;
     this.hook = hook;
     this.name = name;
     this.description = description;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public String getHook() {
-    return hook;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public String getDescription() {
-    return description;
   }
 }

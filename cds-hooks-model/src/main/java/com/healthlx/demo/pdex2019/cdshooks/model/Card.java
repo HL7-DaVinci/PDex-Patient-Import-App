@@ -18,23 +18,11 @@ public class Card {
   private List<Suggestion> suggestions = new ArrayList<>();
   private List<Link> links = new ArrayList<>();
 
-  /**
-   * Add a suggestion.
-   *
-   * @param suggestionsItem The suggestion.
-   * @return
-   */
   public Card addSuggestionsItem(Suggestion suggestionsItem) {
     this.suggestions.add(suggestionsItem);
     return this;
   }
 
-  /**
-   * Add a link.
-   *
-   * @param linksItem The link.
-   * @return
-   */
   public Card addLinksItem(Link linksItem) {
     this.links.add(linksItem);
     return this;
@@ -60,15 +48,13 @@ public class Card {
      * @return indicatorEnum
      */
     @JsonCreator
-    public static IndicatorEnum fromValue(String value) throws IOException {
+    public static IndicatorEnum fromValue(String value) {
       for (IndicatorEnum indicatorEnum : IndicatorEnum.values()) {
         if (indicatorEnum.toString().equals(value)) {
           return indicatorEnum;
         }
       }
       return null;
-      //    throw new RuntimeException("Hook was set to '" + value +
-      //        "', but it can only be one of: " + Arrays.toString(Hook.values()));
     }
 
     @JsonValue
