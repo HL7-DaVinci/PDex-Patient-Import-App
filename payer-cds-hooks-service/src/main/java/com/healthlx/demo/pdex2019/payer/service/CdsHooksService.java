@@ -4,13 +4,20 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
+import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.healthlx.demo.pdex2019.cdshooks.model.*;
+import com.healthlx.demo.pdex2019.cdshooks.model.Card;
+import com.healthlx.demo.pdex2019.cdshooks.model.CdsRequest;
+import com.healthlx.demo.pdex2019.cdshooks.model.CdsService;
+import com.healthlx.demo.pdex2019.cdshooks.model.CdsServiceInformation;
+import com.healthlx.demo.pdex2019.cdshooks.model.Link;
 import com.healthlx.demo.pdex2019.payer.exception.CdsServiceNotFoundException;
 import com.healthlx.demo.pdex2019.payer.exception.CdsServiceNotSupportedException;
 import com.healthlx.demo.pdex2019.payer.exception.PatientNotFoundException;
 import com.healthlx.demo.pdex2019.payer.exception.PatientNotUniqueException;
+import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Enumerations;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Patient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,9 +100,13 @@ public class CdsHooksService {
         Collectors.toList());
     List<String> givenNames = providerPatient.getName().stream().map(HumanName::getGiven).flatMap(List::stream).map(
         Object::toString).collect(Collectors.toList());
-    Bundle results = payerFhirClient.search().forResource(Patient.class).where(
-        Patient.FAMILY.matches().values(familyNames)).and(Patient.GIVEN.matches().values(givenNames)).returnBundle(
-        Bundle.class).execute();
+    Enumerations.AdministrativeGender gender = providerPatient.getGender();
+    IQuery<IBaseBundle> matchingQuery = payerFhirClient.search().forResource(Patient.class).where(
+        Patient.FAMILY.matches().values(familyNames)).and(Patient.GIVEN.matches().values(givenNames)).and(
+        Patient.GENDER.exactly().systemAndCode(gender.getSystem(), gender.toCode())).and(
+        Patient.BIRTHDATE.exactly().day(providerPatient.getBirthDate()));
+
+    Bundle results = matchingQuery.returnBundle(Bundle.class).execute();
     if (results.getEntry().isEmpty()) {
       throw new PatientNotFoundException(
           "A patient with the given names '" + String.join(", ", givenNames) + "' and family names '" + String
@@ -130,7 +141,7 @@ public class CdsHooksService {
 
     private SmartAppointmentHook() {
       super("smart-appointment-hook", "appointment-book", "Appointment Book",
-          "This hook is invoked when the user is scheduling one or more future encounters/visits for the patient.");
+            "This hook is invoked when the user is scheduling one or more future encounters/visits for the patient.");
     }
   }
 }

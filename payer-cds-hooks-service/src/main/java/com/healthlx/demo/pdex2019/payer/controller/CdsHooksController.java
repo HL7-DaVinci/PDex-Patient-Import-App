@@ -53,7 +53,7 @@ public class CdsHooksController {
       return new ResponseEntity<>(cdsResponse.addCard(card), HttpStatus.NOT_FOUND);
     } catch (PatientNotUniqueException e) {
       card = cdsHooksService.createSimpleCard("More than one record matched patient demographics data from EMR");
-      return new ResponseEntity<>(cdsResponse.addCard(card), HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<>(cdsResponse.addCard(card), HttpStatus.UNPROCESSABLE_ENTITY);
     }
     return new ResponseEntity<>(cdsResponse.addCard(card), HttpStatus.OK);
   }

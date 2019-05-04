@@ -9,13 +9,6 @@ import com.healthlx.demo.pdex2019.provider.dto.CurrentContextResponseDto;
 import com.healthlx.demo.pdex2019.provider.fhir.FhirResourceNotFoundException;
 import com.healthlx.demo.pdex2019.provider.fhir.IGenericClientProvider;
 import com.healthlx.demo.pdex2019.provider.oauth2.context.OAuth2ClientContextHolder;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -29,6 +22,12 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -45,34 +44,15 @@ public class CallHookService {
 
   public CurrentContextResponseDto getCurrentContextDetails(CurrentContextDto currentContext) {
     IGenericClient client = clientProvider.client();
-    Patient patient = client.read()
-        .resource(Patient.class)
-        .withId(currentContext.getPatientId())
-        .execute();
-    Practitioner practitioner = client.read()
-        .resource(Practitioner.class)
-        .withId(currentContext.getUserId())
-        .execute();
-    Encounter encounter = Optional.ofNullable(currentContext.getEncounterId())
-        .map(a -> client.read()
-            .resource(Encounter.class)
-            .withId(a)
-            .execute())
-        .orElse(null);
-    List<Coverage> coverages = client.search()
-        .forResource(Coverage.class)
-        .where(Coverage.SUBSCRIBER.hasId(patient.getIdElement()))
-        .and(Coverage.STATUS.exactly()
-                 .code("active"))
-        .include(Coverage.INCLUDE_PAYOR.asNonRecursive())
-        .returnBundle(Bundle.class)
-        .execute()
-        .getEntry()
-        .stream()
-        .map(BundleEntryComponent::getResource)
-        .filter(Coverage.class::isInstance)
-        .map(Coverage.class::cast)
-        .collect(Collectors.toList());
+    Patient patient = client.read().resource(Patient.class).withId(currentContext.getPatientId()).execute();
+    Practitioner practitioner = client.read().resource(Practitioner.class).withId(currentContext.getUserId()).execute();
+    Encounter encounter = Optional.ofNullable(currentContext.getEncounterId()).map(a -> client.read().resource(
+        Encounter.class).withId(a).execute()).orElse(null);
+    List<Coverage> coverages = client.search().forResource(Coverage.class).where(
+        Coverage.SUBSCRIBER.hasId(patient.getIdElement())).and(Coverage.STATUS.exactly().code("active")).include(
+        Coverage.INCLUDE_PAYOR.asNonRecursive()).returnBundle(Bundle.class).execute().getEntry().stream().map(
+        BundleEntryComponent::getResource).filter(Coverage.class::isInstance).map(Coverage.class::cast).collect(
+        Collectors.toList());
 
     return new CurrentContextResponseDto(patient, practitioner, encounter, coverages);
   }
@@ -93,59 +73,33 @@ public class CallHookService {
     IGenericClient client = clientProvider.client();
 
     //Retrieve resources to check whether IDs are valid
-    Patient patient = client.read()
-        .resource(Patient.class)
-        .withId(patientId)
-        .execute();
-    Practitioner practitioner = client.read()
-        .resource(Practitioner.class)
-        .withId(practitionerId)
-        .execute();
-    Encounter encounter = Optional.ofNullable(encounterId)
-        .map(a -> client.read()
-            .resource(Encounter.class)
-            .withId(a)
-            .execute())
-        .orElse(null);
-    Coverage coverage = Optional.ofNullable(coverageId)
-        .map(a -> client.read()
-            .resource(Coverage.class)
-            .withId(a)
-            .execute())
-        .orElse(null);
+    Patient patient = client.read().resource(Patient.class).withId(patientId).execute();
+    Practitioner practitioner = client.read().resource(Practitioner.class).withId(practitionerId).execute();
+    Encounter encounter = Optional.ofNullable(encounterId).map(a -> client.read().resource(Encounter.class).withId(a)
+        .execute()).orElse(null);
+    Coverage coverage = Optional.ofNullable(coverageId).map(a -> client.read().resource(Coverage.class).withId(a)
+        .execute()).orElse(null);
 
     //Check resources exist
-    String verifiedPatientId = Optional.ofNullable(patient)
-        .map(p -> patient.getIdElement()
-            .getIdPart())
-        .orElseThrow(() -> new FhirResourceNotFoundException(patientId, Patient.class));
+    String verifiedPatientId = Optional.ofNullable(patient).map(p -> patient.getIdElement().getIdPart()).orElseThrow(
+        () -> new FhirResourceNotFoundException(patientId, Patient.class));
 
-    String verifiedPractitionerId = Optional.ofNullable(practitioner)
-        .map(p -> practitioner.getIdElement()
-            .getIdPart())
+    String verifiedPractitionerId = Optional.ofNullable(practitioner).map(p -> practitioner.getIdElement().getIdPart())
         .orElseThrow(() -> new FhirResourceNotFoundException(practitionerId, Practitioner.class));
 
     //Disabling null check for encounter will let us launch and test the App without encounter selection.
-    String verifiedEncounterId = Optional.ofNullable(encounter)
-        .map(p -> encounter.getIdElement()
-            .getIdPart())
-        .orElse(null);
-    String subscriberId = Optional.ofNullable(coverage)
-        .map(p -> coverage.getSubscriberId())
-        .orElse(null);
+    String verifiedEncounterId = Optional.ofNullable(encounter).map(p -> encounter.getIdElement().getIdPart()).orElse(
+        null);
+    String subscriberId = Optional.ofNullable(coverage).map(p -> coverage.getSubscriberId()).orElse(null);
 
     CdsRequest cdsRequest = composeCdsRequest(client, verifiedPatientId, verifiedPractitionerId, verifiedEncounterId,
                                               subscriberId);
-
-    return new RestTemplate().postForEntity(cdsHookUri, cdsRequest, CdsResponse.class)
-        .getBody();
+    return new RestTemplate().postForEntity(cdsHookUri, cdsRequest, CdsResponse.class).getBody();
   }
 
   private CdsRequest composeCdsRequest(IGenericClient client, String patientId, String practitionerId,
       String encounterId, String subscriberId) {
-
-    OAuth2AccessToken accessToken = OAuth2ClientContextHolder.currentContext()
-        .getAccessToken();
+    OAuth2AccessToken accessToken = OAuth2ClientContextHolder.currentContext().getAccessToken();
     FhirAuthorization authorization = new FhirAuthorization();
     authorization.setAccessToken(accessToken.getValue());
     authorization.setTokenType(accessToken.getTokenType());

@@ -20,8 +20,7 @@ public class CurrentContextArgumentResolver implements HandlerMethodArgumentReso
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
-    return parameter.getParameterType()
-        .equals(CurrentContextDto.class);
+    return parameter.getParameterType().equals(CurrentContextDto.class);
   }
 
   @Override
@@ -30,12 +29,8 @@ public class CurrentContextArgumentResolver implements HandlerMethodArgumentReso
 
     OAuth2ClientContext context = OAuth2ClientContextHolder.currentContext();
 
-    String patientId = (String) context.getAccessToken()
-        .getAdditionalInformation()
-        .get("patient");
-    String encounterId = (String) context.getAccessToken()
-        .getAdditionalInformation()
-        .get("encounter");
+    String patientId = (String) context.getAccessToken().getAdditionalInformation().get("patient");
+    String encounterId = (String) context.getAccessToken().getAdditionalInformation().get("encounter");
 
     SecurityContext securityContext = SecurityContextHolder.getContext();
     Assert.notNull(securityContext.getAuthentication(), "Authentication object is missing from security context.");

@@ -35,8 +35,8 @@ public class LaunchAwareOAuth2ClientContextFilter extends OAuth2ClientContextFil
       builder.queryParam("state", e.getStateKey());
     }
 
-    DefaultSavedRequest savedRequest = (DefaultSavedRequest) request.getSession()
-        .getAttribute("SPRING_SECURITY_SAVED_REQUEST");
+    DefaultSavedRequest savedRequest = (DefaultSavedRequest) request.getSession().getAttribute(
+        "SPRING_SECURITY_SAVED_REQUEST");
 
     String launch = getSavedRequestParameter(savedRequest, "launch");
     if (launch != null) {
@@ -48,9 +48,7 @@ public class LaunchAwareOAuth2ClientContextFilter extends OAuth2ClientContextFil
       builder.queryParam("aud", iss);
     }
 
-    redirectStrategy.sendRedirect(request, response, builder.build()
-        .encode()
-        .toUriString());
+    redirectStrategy.sendRedirect(request, response, builder.build().encode().toUriString());
   }
 
   private String getSavedRequestParameter(DefaultSavedRequest savedRequest, String parameterName) {
