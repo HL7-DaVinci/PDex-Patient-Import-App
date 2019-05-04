@@ -29,7 +29,12 @@ public class CdsHooksController {
 
   @RequestMapping(value = "/cds-services", method = RequestMethod.OPTIONS)
   public ResponseEntity cdsServicesOptions(HttpServletResponse response) {
-    response.setHeader("Allow", "GET,HEAD,POST");
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE");
+    response.setHeader("Access-Control-Max-Age", "3600");
+    response.setHeader("Access-Control-Allow-Headers",
+                       "X-FHIR-Starter,authorization,Prefer,Origin,Accept,X-Requested-With,Content-Type,"
+                           + "Access-Control-Request-Method,Access-Control-Request-Headers");
     return ResponseEntity.ok().build();
   }
 
