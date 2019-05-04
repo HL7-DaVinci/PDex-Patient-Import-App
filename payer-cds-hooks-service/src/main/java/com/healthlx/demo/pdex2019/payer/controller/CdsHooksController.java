@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class CdsHooksController {
 
@@ -27,14 +28,10 @@ public class CdsHooksController {
     return cdsHooksService.getCdsServices();
   }
 
+  @CrossOrigin
   @RequestMapping(value = "/cds-services", method = RequestMethod.OPTIONS)
   public ResponseEntity cdsServicesOptions(HttpServletResponse response) {
-    response.setHeader("Access-Control-Allow-Origin", "*");
-    response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE");
-    response.setHeader("Access-Control-Max-Age", "3600");
-    response.setHeader("Access-Control-Allow-Headers",
-                       "X-FHIR-Starter,authorization,Prefer,Origin,Accept,X-Requested-With,Content-Type,"
-                           + "Access-Control-Request-Method,Access-Control-Request-Headers");
+    response.setHeader("Allow", "POST, PUT, GET, OPTIONS, DELETE");
     return ResponseEntity.ok().build();
   }
 
