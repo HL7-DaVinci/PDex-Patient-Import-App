@@ -5,8 +5,11 @@ import com.healthlx.demo.pdex2019.provider.dto.CurrentContextDto;
 import com.healthlx.demo.pdex2019.provider.dto.CurrentContextResponseDto;
 import com.healthlx.demo.pdex2019.provider.fhir.FhirResourceNotFoundException;
 import com.healthlx.demo.pdex2019.provider.service.CallHookService;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,12 +17,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
 @Validated
+@RestController
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class CallHookController {
 
-  @Autowired
-  private CallHookService pdexService;
+  private final CallHookService pdexService;
 
   @GetMapping("/current-context")
   public CurrentContextResponseDto getCurrentContext(@Valid CurrentContextDto currentContextDto) {

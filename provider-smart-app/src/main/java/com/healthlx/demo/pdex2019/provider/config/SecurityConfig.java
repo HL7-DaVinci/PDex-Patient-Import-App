@@ -26,8 +26,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   // filter bean provided by spring-security-oauth2-autoconfigure.
   @Bean
   public OAuth2ClientContextFilter oauth2ClientContextFilter() {
-    OAuth2ClientContextFilter filter = new LaunchAwareOAuth2ClientContextFilter();
-    return filter;
+    return new LaunchAwareOAuth2ClientContextFilter();
   }
 
 }
