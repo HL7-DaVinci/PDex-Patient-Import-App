@@ -31,7 +31,7 @@ public class CdsHooksController {
   @CrossOrigin
   @RequestMapping(value = "/cds-services", method = RequestMethod.OPTIONS)
   public ResponseEntity cdsServicesOptions(HttpServletResponse response) {
-    response.setHeader("Allow", "POST, PUT, GET, OPTIONS, DELETE");
+    response.setHeader("Allow", "GET, HEAD, POST");
     return ResponseEntity.ok().build();
   }
 

@@ -1,6 +1,7 @@
 package com.healthlx.demo.pdex2019.provider.dto;
 
 import javax.validation.constraints.NotBlank;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;

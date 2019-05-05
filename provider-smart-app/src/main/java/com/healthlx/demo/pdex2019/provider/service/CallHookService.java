@@ -34,11 +34,13 @@ import java.util.stream.Collectors;
 public class CallHookService {
 
   private final IGenericClientProvider clientProvider;
+  private final RestTemplate restTemplate;
   private final String cdsHookUri;
 
-  public CallHookService(@Autowired IGenericClientProvider clientProvider,
+  public CallHookService(@Autowired IGenericClientProvider clientProvider, @Autowired RestTemplate restTemplate,
       @Value("${payer.cds-hook-uri}") String cdsHookUri) {
     this.clientProvider = clientProvider;
+    this.restTemplate = restTemplate;
     this.cdsHookUri = cdsHookUri;
   }
 
@@ -94,7 +96,7 @@ public class CallHookService {
 
     CdsRequest cdsRequest = composeCdsRequest(client, verifiedPatientId, verifiedPractitionerId, verifiedEncounterId,
                                               subscriberId);
-    return new RestTemplate().postForEntity(cdsHookUri, cdsRequest, CdsResponse.class).getBody();
+    return restTemplate.postForEntity(cdsHookUri, cdsRequest, CdsResponse.class).getBody();
   }
 
   private CdsRequest composeCdsRequest(IGenericClient client, String patientId, String practitionerId,

@@ -1,19 +1,10 @@
 package com.healthlx.demo.pdex2019.provider.service;
 
 import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.healthlx.demo.pdex2019.provider.dto.ImportRecordDto;
 import com.healthlx.demo.pdex2019.provider.fhir.DisplayUtil;
 import com.healthlx.demo.pdex2019.provider.fhir.IGenericClientProvider;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.hl7.fhir.r4.model.Attachment;
@@ -32,15 +23,33 @@ import org.hl7.fhir.r4.model.Procedure;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class DataImportService {
 
   private final IGenericClientProvider clientProvider;
   private final IParser parser;
+  private final List<String> excludedResources;
+
+  public DataImportService(@Autowired IGenericClientProvider clientProvider, @Autowired IParser parser,
+      @Value("${provider.data-import.exclude-resources}") String excludeResourcesString) {
+    this.clientProvider = clientProvider;
+    this.parser = parser;
+    this.excludedResources = excludeResourcesString.isEmpty() ? new ArrayList<>() : Arrays.asList(
+        excludeResourcesString.split(","));
+  }
 
   public Map<Class<? extends Resource>, Set<ImportRecordDto>> getRecordsFromPayer(String subscriberId,
       String payerServerUrl, String payerServerToken) {
@@ -107,18 +116,18 @@ public class DataImportService {
       Bundle bundle = payerClient.search().forResource(rClass).where(
           Resource.RES_ID.exactly().codes(importIds.get(rClass))).returnBundle(Bundle.class).execute();
 
-      boolean canPersist = canPersist(capabilityStatement, rClass);
+      boolean canPersist = canPersist(capabilityStatement, rClass.getSimpleName());
       for (BundleEntryComponent entry : bundle.getEntry()) {
-        Resource r = entry.getResource();
+        Resource resource = entry.getResource();
         //Set id as null to create a new one on persist.
-        r.setId((String) null);
+        resource.setId((String) null);
 
         //Reset old patient reference in Payer system to a new one from EMR
-        setPatientReference(r, patient);
+        setPatientReference(resource, patient);
         if (canPersist) {
-          persistBundle.addEntry().setResource(r).getRequest().setMethod(Bundle.HTTPVerb.POST);
+          persistBundle.addEntry().setResource(resource).getRequest().setMethod(Bundle.HTTPVerb.POST);
         } else {
-          documentBundle.addEntry().setResource(r).getRequest().setMethod(Bundle.HTTPVerb.POST);
+          documentBundle.addEntry().setResource(resource).getRequest().setMethod(Bundle.HTTPVerb.POST);
         }
       }
     }
@@ -126,26 +135,24 @@ public class DataImportService {
       client.transaction().withBundle(persistBundle).execute();
     }
     if (!documentBundle.getEntry().isEmpty()) {
-      DocumentReference.DocumentReferenceContentComponent c = new DocumentReference.DocumentReferenceContentComponent();
-      c.setAttachment(new Attachment().setData(parser.encodeResourceToString(documentBundle).getBytes()));
-      DocumentReference dr = new DocumentReference();
-      dr.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
-      dr.addContent(c);
-      dr.setSubject(new Reference(patient));
-      MethodOutcome out = client.create().resource(dr).execute();
-      System.out.println(parser.encodeResourceToString(out.getResource()));
+      DocumentReference documentReference = new DocumentReference();
+      documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
+      documentReference.setSubject(new Reference(patient));
+      DocumentReference.DocumentReferenceContentComponent content =
+          new DocumentReference.DocumentReferenceContentComponent();
+      content.setAttachment(new Attachment().setData(parser.encodeResourceToString(documentBundle).getBytes()));
+      documentReference.addContent(content);
+      client.create().resource(documentReference).execute();
     }
   }
 
-  private boolean canPersist(CapabilityStatement capabilityStatement, Class<? extends Resource> rClass) {
+  private boolean canPersist(CapabilityStatement capabilityStatement, String resourceName) {
     Optional<CapabilityStatementRestResourceComponent> res = capabilityStatement.getRest().get(0).getResource().stream()
-        .filter(c -> rClass.getSimpleName().equals(c.getType())).findFirst();
-    if (res.isPresent()) {
+        .filter(c -> resourceName.equals(c.getType())).findFirst();
+    if (res.isPresent() && !excludedResources.contains(resourceName)) {
       Optional<ResourceInteractionComponent> status = res.get().getInteraction().stream().filter(
           i -> "create".equals(i.getCode().getDisplay())).findFirst();
-      if (status.isPresent()) {
-        return true;
-      }
+      return status.isPresent();
     }
     return false;
   }
