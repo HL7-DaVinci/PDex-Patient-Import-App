@@ -53,7 +53,7 @@ public class CallHookService {
     Encounter encounter = Optional.ofNullable(currentContext.getEncounterId()).map(a -> client.read().resource(
         Encounter.class).withId(a).execute()).orElse(null);
     List<Coverage> coverages = client.search().forResource(Coverage.class).where(
-        Coverage.SUBSCRIBER.hasId(patient.getIdElement())).and(Coverage.STATUS.exactly().code("active")).include(
+        Coverage.SUBSCRIBER.hasId(patient.getIdElement().getIdPart())).and(Coverage.STATUS.exactly().code("active")).include(
         Coverage.INCLUDE_PAYOR.asNonRecursive()).returnBundle(Bundle.class).execute().getEntry().stream().map(
         BundleEntryComponent::getResource).filter(Coverage.class::isInstance).map(Coverage.class::cast).collect(
         Collectors.toList());
