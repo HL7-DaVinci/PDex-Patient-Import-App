@@ -18,9 +18,11 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.LinkedHashMap;
@@ -96,7 +98,7 @@ public class CallHookService {
 
     CdsRequest cdsRequest = composeCdsRequest(client, verifiedPatientId, verifiedPractitionerId, verifiedEncounterId,
                                               subscriberId);
-    return restTemplate.postForEntity(cdsHookUri, cdsRequest, CdsResponse.class).getBody();
+    return getCdsResponse(cdsRequest);
   }
 
   private CdsRequest composeCdsRequest(IGenericClient client, String patientId, String practitionerId,
@@ -122,4 +124,25 @@ public class CallHookService {
     cdsRequest.setContext(context);
     return cdsRequest;
   }
+
+  private CdsResponse getCdsResponse(CdsRequest cdsRequest) {
+    try {
+      return restTemplate.postForEntity(cdsHookUri, cdsRequest, CdsResponse.class).getBody();
+    } catch (HttpClientErrorException e) {
+      // TODO: To use proper error handling
+      HttpStatus statusCode = e.getStatusCode();
+      if (e.getResponseBodyAsByteArray().length > 0) {
+        if (statusCode == HttpStatus.UNPROCESSABLE_ENTITY) {
+          throw new HttpClientErrorException(HttpStatus.UNPROCESSABLE_ENTITY,
+                                             "More than one record matched patient demographics data from EMR");
+        } else if (statusCode == HttpStatus.NOT_FOUND) {
+          throw new HttpClientErrorException(HttpStatus.NOT_FOUND,
+                                             "No patient was found either by subscriber id or by EMR demographics data "
+                                                 + "matching");
+        }
+      }
+      throw e;
+    }
+  }
+
 }
