@@ -137,7 +137,7 @@ public class DataImportService {
     if (!documentBundle.getEntry().isEmpty()) {
       DocumentReference documentReference = new DocumentReference();
       documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
-      documentReference.setSubject(new Reference(patient));
+      documentReference.setSubject(new Reference("Patient/" + patient.getIdElement().getIdPart()));
       DocumentReference.DocumentReferenceContentComponent content =
           new DocumentReference.DocumentReferenceContentComponent();
       content.setAttachment(new Attachment().setData(parser.encodeResourceToString(documentBundle).getBytes()));
