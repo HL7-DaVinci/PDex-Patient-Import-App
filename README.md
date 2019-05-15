@@ -19,10 +19,10 @@ Some functionality is out of scope in this implementation but might be implement
 3. CDS-Hooks Service can connect to a Payer FHIR Server only through an open endpoint.
 
 # Sources
-This is a Maven multi-module project with two Spring-Boot Applications: Provider Smart App and Payer CDS-Hooks Service.
+This is a Gradle multi-module project with two Spring-Boot Applications: Provider Smart App and Payer CDS-Hooks Service.
 ### Build
 ```sh
-mvn clean install
+gradlew clean build
 ```
 ### Deploy
 All Apps are automatically deployed to [Heroku](https://dashboard.heroku.com):
