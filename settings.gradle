@@ -1,0 +1,4 @@
+rootProject.name = 'pdex-2019'
+include ':cds-hooks-model'
+include ':provider-smart-app'
+include ':payer-cds-hooks-service'

@@ -15,6 +15,10 @@ import com.healthlx.demo.pdex2019.payer.exception.CdsServiceNotFoundException;
 import com.healthlx.demo.pdex2019.payer.exception.CdsServiceNotSupportedException;
 import com.healthlx.demo.pdex2019.payer.exception.PatientNotFoundException;
 import com.healthlx.demo.pdex2019.payer.exception.PatientNotUniqueException;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Enumerations;
@@ -24,11 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class CdsHooksService {
@@ -141,7 +140,7 @@ public class CdsHooksService {
 
     private SmartAppointmentHook() {
       super("smart-appointment-hook", "appointment-book", "Appointment Book",
-            "This hook is invoked when the user is scheduling one or more future encounters/visits for the patient.");
+          "This hook is invoked when the user is scheduling one or more future encounters/visits for the patient.");
     }
   }
 }
