@@ -1,4 +1,6 @@
-description = 'Payer CDS Hook Service'
+plugins {
+    id 'org.springframework.boot' version '2.1.4.RELEASE'
+}
 
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter-web:2.1.4.RELEASE'
@@ -8,3 +10,4 @@ dependencies {
     testCompile 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
 }
 
+description = 'Payer CDS Hook Service'
