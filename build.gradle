@@ -1,0 +1,26 @@
+description = 'A set of demo apps which implements Scenario 1 of a PDex use case https://confluence.hl7.org/display/DVP/PDex+Reference+Implementation'
+
+allprojects {
+    group = 'com.healthlx.demo.pdex2019'
+    version = '0.0.1-SNAPSHOT'
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+
+    repositories {
+        mavenLocal()
+        maven {
+            url = 'http://repo.maven.apache.org/maven2'
+        }
+    }
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok:1.18.6'
+        annotationProcessor 'org.projectlombok:lombok:1.18.8'
+    }
+
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
