@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<meta charset="utf-8">
 	<title>HealthLX demo app</title>
@@ -13,9 +14,18 @@
 		body {
 			font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 		}
-	</style>
+    .hlx-logo {
+      float: right;
+    }
+    .hlx-logo > img {
+      float: right;
+      width: 40%;
+    }
+  </style>
 </head>
+
 <body>
+
 	<template id="hlx-patient-form">
 		<el-form v-loading="loading" :model="context" label-width="120px">
 			<el-form-item label="Patient">
@@ -46,6 +56,7 @@
 			</el-card>
 		</el-form>
 	</template>
+
 	<template id="hlx-import-form">
 		<el-form v-loading="loading">
 			<el-form-item v-for="(values, key) in records">
@@ -64,10 +75,13 @@
 			:payer-server-url="payerServerUrl" :subscriber-id="subscriberId" :patient-id="patientId"></hlx-import-form>
 		<hlx-patient-form v-else></hlx-patient-form>
 	</template>
+
 	<el-container id="app" width="320px">
+
 		<el-header>
-			<el-image src="healthlx-logo.png" alt="HealthLX"></el-image>
+      <el-image src="da-vinci_logo.jpg" alt="HealthLX"></el-image>
 		</el-header>
+
 		<el-main>
 			<el-row type="flex" justify="center">
 				<el-col :span="8" :xs="16" :sm="16" :md="8">
@@ -75,7 +89,12 @@
 				</el-col>
 			</el-row>
 		</el-main>
+    <el-footer>
+      <el-image src="healthlx-logo.png" alt="HealthLX" class="hlx-logo"></el-image>
+    </el-footer>
+
 	</el-container>
+
 	<script>
 		Vue.use(VueRouter);
 		ELEMENT.locale(ELEMENT.lang.en);
