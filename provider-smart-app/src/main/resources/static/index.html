@@ -103,6 +103,10 @@
 			return Object.entries(query).map(q => q[1] ? q.join("=") : null).filter(Boolean).join("&");
 		}
 
+    function errorMessage(data) {
+      return data ? 'Error: ' + data : 'Error happened.';
+    }
+
 		var hlxPatientForm = Vue.component("hlx-patient-form", {
 			template: "#hlx-patient-form",
 			data() {
@@ -123,10 +127,7 @@
 				axios.get("/current-context").then(response => {
 					this.context = response.data;
 				}).catch(error => {
-					this.$notify.error({
-						title: "Error",
-						message: error.response.data.message
-					});
+					this.$message.error(errorMessage(error.response.data.message));
 				}).finally(() => {
 					this.loading = false;
 				});
@@ -142,10 +143,7 @@
 					axios.post(`/call-hook?${qs({patientId, practitionerId, encounterId, coverageId})}`, this.context).then(response => {
 						this.card = response.data.cards[0];
 					}).catch(error => {
-						this.$notify.error({
-							title: "Error",
-							message: error.response.data.message
-						});
+						this.$message.error(errorMessage(error.response.data.message));
 					}).finally(() => {
 						this.loading = false;
 					});
@@ -173,10 +171,7 @@
 					this.records = response.data;
 				}).catch(error => {
 					}).catch(error => {
-						this.$notify.error({
-							title: "Error",
-							message: error.response.data.message
-						});
+          this.$message.error(errorMessage(error.response.data.message));
 				}).finally(() => {
 					this.loading = false;
 				});
@@ -199,12 +194,17 @@
 
 					this.loading = true;
 					axios.post(`/import-records?${qs({payerServerUrl, patientId})}`, data).then(() => {
-						router.push("/");
+            this.$alert(
+                'Now you will be navigated to home page',
+                'Success',
+                {
+                  confirmButtonText: 'OK',
+                  callback: action => {
+                    router.push("/");
+                  }
+                });
 					}).catch(error => {
-						this.$notify.error({
-							title: "Error",
-							message: error.response.data.message
-						});
+              this.$message.error(errorMessage(error.response.data.message));
 					}).finally(() => {
 						this.loading = false;
 					});

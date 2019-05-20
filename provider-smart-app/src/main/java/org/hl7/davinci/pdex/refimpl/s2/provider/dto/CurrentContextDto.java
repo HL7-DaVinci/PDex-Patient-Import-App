@@ -22,12 +22,12 @@ public class CurrentContextDto {
   private final String userProfile;
 
   public String getUserType() {
-    Assert.notNull(userProfile, "useProfile cannot be null");
+    Assert.notNull(userProfile, "userProfile cannot be null");
     return StringUtils.substringBefore(userProfile, "/");
   }
 
   public String getUserId() {
-    Assert.notNull(userProfile, "useProfile cannot be null");
+    Assert.notNull(userProfile, "userProfile cannot be null");
     return StringUtils.substringAfter(userProfile, "/");
   }
 }

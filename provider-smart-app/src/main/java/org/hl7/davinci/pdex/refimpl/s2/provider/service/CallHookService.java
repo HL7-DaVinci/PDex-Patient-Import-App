@@ -139,6 +139,9 @@ public class CallHookService {
           throw new HttpClientErrorException(HttpStatus.NOT_FOUND,
                                              "No patient was found either by subscriber id or by EMR demographics data "
                                                  + "matching");
+        } else if (statusCode == HttpStatus.UNAUTHORIZED){
+          throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED,
+              "Unathorized during call for cds hooks");
         }
       }
       throw e;
