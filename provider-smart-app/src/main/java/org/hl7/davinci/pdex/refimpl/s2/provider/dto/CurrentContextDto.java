@@ -1,7 +1,6 @@
 package org.hl7.davinci.pdex.refimpl.s2.provider.dto;
 
 import javax.validation.constraints.NotBlank;
-
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +21,7 @@ public class CurrentContextDto {
   private final String userProfile;
 
   public String getUserType() {
+    //Might be null when persona contains dot or other special characters. Also might be cached in browser
     Assert.notNull(userProfile, "userProfile cannot be null");
     return StringUtils.substringBefore(userProfile, "/");
   }
