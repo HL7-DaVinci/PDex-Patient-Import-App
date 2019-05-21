@@ -75,7 +75,7 @@ cmake-build-debug/
 ## Plugin-specific files:
 
 # IntelliJ
-/out/
+out/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -220,7 +220,7 @@ $RECYCLE.BIN/
 
 # Gradle #
 .gradle
-/build/
+build/
 
 # Ignore Gradle GUI config
 gradle-app.setting

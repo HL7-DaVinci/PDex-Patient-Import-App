@@ -1,4 +1,6 @@
 rootProject.name = 'refimpl'
+
 include ':cds-hooks-model'
-include ':provider-smart-app'
-include ':payer-cds-hooks-service'
+
+include ':payer2provider:provider-smart-app'
+include ':payer2provider:payer-cds-hooks-service'
