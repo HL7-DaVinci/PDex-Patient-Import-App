@@ -1,7 +1,7 @@
 description = 'A set of demo apps which implements Scenario 1 of a PDex use case https://confluence.hl7.org/display/DVP/PDex+Reference+Implementation'
 
 allprojects {
-    group = 'com.healthlx.demo.pdex2019'
+    group = 'org.hl7.davinci.pdex.refimpl'
     version = '0.0.1-SNAPSHOT'
 }
 
