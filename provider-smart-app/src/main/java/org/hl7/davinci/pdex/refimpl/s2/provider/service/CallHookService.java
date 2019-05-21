@@ -61,8 +61,8 @@ public class CallHookService {
     return new CurrentContextResponseDto(patient, practitioner, encounter, coverages);
   }
 
-  //TODO: Select a CDS Hook Service URL based on a Coverage->Payor. Currently all requests will go to the same Payer
-  // CDS Hook service. Even if no Coverage is present - we will just send a CDS Hook request withou a subscriber ID.
+  //TODO: Select a CDS Hook Service URL based on a Coverage->Payer. Currently all requests will go to the same Payer
+  // CDS Hook service. Even if no Coverage is present - we will just send a CDS Hook request without a subscriber ID.
   public CdsResponse callHook(String patientId, String practitionerId, String encounterId, String coverageId)
       throws FhirResourceNotFoundException {
 
