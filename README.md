@@ -32,6 +32,9 @@ All Apps are automatically deployed to [Heroku](https://dashboard.heroku.com):
 Sources are built from [this GitHub repository](https://github.com/HL7-DaVinci/PDex-Patient-Import-App) and redeployed automatically on every new commit.
 
 ### Docker
+
+***NOTE: We are migrating to gradle build system so docker files are not up to date yet.***
+
 Both apps can be easily deployed in a Docker container.
 Provide Payer CDS-Hooks Service configuration:
 ```sh

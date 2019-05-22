@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>HealthLX demo app</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/vue-router/3.0.6/vue-router.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.8.2/index.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.8.2/locale/en.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.8.2/theme-chalk/index.css">
+	<style>
+		body {
+			font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+		}
+    .hlx-logo {
+      float: right;
+    }
+    .hlx-logo > img {
+      float: right;
+      width: 40%;
+    }
+  </style>
+</head>
+
+<body>
+
+	<template id="hlx-patient-form">
+		<el-form v-loading="loading" :model="context" label-width="120px">
+			<el-form-item label="Patient">
+				<el-input v-model="context.patient.name" :readonly="true"></el-input>
+			</el-form-item>
+			<el-form-item label="Practitioner">
+				<el-input v-model="context.practitioner.name" :readonly="true"></el-input>
+			</el-form-item>
+			<el-form-item label="Coverage">
+				<el-select v-model="context.coverageId">
+					<el-option
+						v-for="coverage in context.coverages"
+						:label="coverage.payorName"
+						:value="coverage.id"></el-option>
+				</el-select>
+			</el-form-item>
+			<el-form-item>
+				<el-button type="primary" @click="onSubmit">Submit</el-button>
+			</el-form-item>
+			<el-card v-if="card">
+				<pre slot="header">{{card.summary}}</pre>
+				<template v-if="card.source">
+					Source: <el-link type="primary" :href="card.source.url">{{card.source.label}}</el-link>
+				</template>
+				<template v-for="link in card.links">
+					<el-link type="primary" :href="link.url">{{link.label}}</el-link>
+				</template>
+			</el-card>
+		</el-form>
+	</template>
+
+	<template id="hlx-import-form">
+		<el-form v-loading="loading">
+			<el-form-item v-for="(values, key) in records">
+				<el-table :data="values" @selection-change="onSelect($event, key)">
+					<el-table-column type="selection" width="55"></el-table-column>
+					<el-table-column property="display" :label="key | display"></el-table-column>
+				</el-table>
+			</el-form-item>
+			<el-form-item>
+				<el-button type="primary" @click="onImport">Import</el-button>
+			</el-form-item>
+		</el-form>
+	</template>
+	<template id="hlx-smart-form">
+		<hlx-import-form v-if="payerServerUrl && subscriberId && patientId"
+			:payer-server-url="payerServerUrl" :subscriber-id="subscriberId" :patient-id="patientId"></hlx-import-form>
+		<hlx-patient-form v-else></hlx-patient-form>
+	</template>
+
+	<el-container id="app" width="320px">
+
+		<el-header>
+      <el-image src="da-vinci_logo.jpg" alt="HealthLX"></el-image>
+		</el-header>
+
+		<el-main>
+			<el-row type="flex" justify="center">
+				<el-col :span="8" :xs="16" :sm="16" :md="8">
+					<router-view></router-view>
+				</el-col>
+			</el-row>
+		</el-main>
+    <el-footer>
+      <el-image src="healthlx-logo.png" alt="HealthLX" class="hlx-logo"></el-image>
+    </el-footer>
+
+	</el-container>
+
+	<script>
+		Vue.use(VueRouter);
+		ELEMENT.locale(ELEMENT.lang.en);
+
+		function qs(query = {}) {
+			return Object.entries(query).map(q => q[1] ? q.join("=") : null).filter(Boolean).join("&");
+		}
+
+    function errorMessage(data) {
+      return data ? 'Error: ' + data : 'Error happened.';
+    }
+
+		var hlxPatientForm = Vue.component("hlx-patient-form", {
+			template: "#hlx-patient-form",
+			data() {
+				return {
+					loading: false,
+					context: {
+						patient: {},
+						practitioner: {},
+						encounterId: null,
+						coverageId: null,
+						coverages: []
+					},
+					card: null
+				};
+			},
+			mounted() {
+				this.loading = true;
+				axios.get("/current-context").then(response => {
+					this.context = response.data;
+				}).catch(error => {
+					this.$message.error(errorMessage(error.response.data.message));
+				}).finally(() => {
+					this.loading = false;
+				});
+			},
+			methods: {
+				onSubmit() {
+					const patientId = this.context.patient.id;
+					const practitionerId = this.context.practitioner.id;
+					const encounterId = this.context.encounterId;
+					const coverageId = this.context.coverageId;
+
+					this.loading = true;
+					axios.post(`/call-hook?${qs({patientId, practitionerId, encounterId, coverageId})}`, this.context).then(response => {
+						this.card = response.data.cards[0];
+					}).catch(error => {
+						this.$message.error(errorMessage(error.response.data.message));
+					}).finally(() => {
+						this.loading = false;
+					});
+				}
+			}
+		});
+
+		var hlxImportForm = Vue.component("hlx-import-form", {
+			template: "#hlx-import-form",
+			props: ["payerServerUrl", "subscriberId", "patientId"],
+			data() {
+				return {
+					loading: false,
+					records: {},
+					selected: {}
+				}
+			},
+			mounted() {
+				const payerServerUrl = this.payerServerUrl;
+				const subscriberId = this.subscriberId;
+				const patientId = this.patientId;
+
+				this.loading = true;
+				axios.get(`/get-payer-records?${qs({payerServerUrl, subscriberId, patientId})}`, this.records).then(response => {
+					this.records = response.data;
+				}).catch(error => {
+					}).catch(error => {
+          this.$message.error(errorMessage(error.response.data.message));
+				}).finally(() => {
+					this.loading = false;
+				});
+			},
+			filters: {
+				display: (value) => value.split(".").pop()
+			},
+			methods: {
+				onSelect(values, key) {
+					this.selected[key] = values;
+				},
+				onImport() {
+					let data = {};
+					for (let key in this.selected) {
+						data[key] = this.selected[key].map(record => record.id);
+					}
+
+					const payerServerUrl = this.payerServerUrl;
+					const patientId = this.patientId;
+
+					this.loading = true;
+					axios.post(`/import-records?${qs({payerServerUrl, patientId})}`, data).then(() => {
+            this.$alert(
+                'Now you will be navigated to home page',
+                'Success',
+                {
+                  confirmButtonText: 'OK',
+                  callback: action => {
+                    router.push("/");
+                  }
+                });
+					}).catch(error => {
+              this.$message.error(errorMessage(error.response.data.message));
+					}).finally(() => {
+						this.loading = false;
+					});
+				}
+			}
+		});
+
+		var hlxSmartForm = Vue.component("hlx-smart-form", {
+			template: "#hlx-smart-form",
+			props: ["payerServerUrl", "subscriberId", "patientId"]
+		});
+
+		var router = new VueRouter({
+			mode: "history",
+			routes: [{
+				path: "*",
+				component: hlxSmartForm,
+				props: (route) => ({
+					payerServerUrl: route.query.payerServerUrl,
+					subscriberId: route.query.subscriberId,
+					patientId: route.query.patientId
+				})
+			}]
+		});
+
+		var app = new Vue({
+			el: "#app",
+			router
+		})
+	</script>
+</body>
+</html>
