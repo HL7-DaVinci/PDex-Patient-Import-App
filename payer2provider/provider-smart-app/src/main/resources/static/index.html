@@ -79,7 +79,7 @@
 	<el-container id="app" width="320px">
 
 		<el-header>
-      <el-image src="da-vinci_logo.jpg" alt="HealthLX"></el-image>
+      <el-image src="da-vinci_logo.jpg" alt="Da Vinci"></el-image>
 		</el-header>
 
 		<el-main>
@@ -194,17 +194,17 @@
 
 					this.loading = true;
 					axios.post(`/import-records?${qs({payerServerUrl, patientId})}`, data).then(() => {
-            this.$alert(
-                'Now you will be navigated to home page',
-                'Success',
-                {
-                  confirmButtonText: 'OK',
-                  callback: action => {
-                    router.push("/");
-                  }
-                });
+						this.$alert(
+								'Now you will be navigated to home page',
+								'Success',
+								{
+									confirmButtonText: 'OK',
+									callback: action => {
+										router.push("/");
+									}
+								});
 					}).catch(error => {
-              this.$message.error(errorMessage(error.response.data.message));
+						this.$message.error(errorMessage(error.response.data.message));
 					}).finally(() => {
 						this.loading = false;
 					});
