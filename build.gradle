@@ -1,7 +1,3 @@
-plugins {
-    id 'java' 
-}
-
 description = 'A set of demo apps which implements Scenario 1 of a PDex use case https://confluence.hl7.org/display/DVP/PDex+Reference+Implementation'
 
 allprojects {
@@ -10,7 +6,8 @@ allprojects {
 }
 
 subprojects {
-    if(file('build.gradle').exists()){ // TODO improve
+    //all our modules works on java, but container folders (e.g. payer2provider) should not have java plugin
+    if(file('build.gradle').exists()){
         apply plugin: 'java'
 
         repositories {
