@@ -4,3 +4,4 @@ include ':cds-hooks-model'
 
 include ':payer2provider:provider-smart-app'
 include ':payer2provider:payer-cds-hooks-service'
+include ':payer2payer:payer-b'
