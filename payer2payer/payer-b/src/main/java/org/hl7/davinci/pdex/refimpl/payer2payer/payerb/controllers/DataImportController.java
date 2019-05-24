@@ -34,7 +34,9 @@ public class DataImportController {
   public void importRecords(@RequestBody Map<Class<? extends Resource>, Set<String>> importIds,
       @RequestParam String payerServerUrl, HttpSession session) {
     Oath2Token payerAToken = (Oath2Token)session.getAttribute("history-token");
+    String subscriberId = (String)session.getAttribute("subscriber-id");
     String patientId = (String)session.getAttribute("patient-id");
-    importService.importRecords(importIds, patientId, payerServerUrl, payerAToken.getAccess_token());
+    importService.importRecords(importIds, subscriberId, payerServerUrl, payerAToken.getAccess_token());
+    importService.importNewIdentifiers(patientId,subscriberId, payerServerUrl, payerAToken.getAccess_token());
   }
 }
