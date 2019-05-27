@@ -50,12 +50,4 @@ public class PayerBService {
     return new CurrentContextResponseDto(patient, null, encounter, coverages);
   }
 
-  public Patient readPatient(String patientId) {
-    try {
-      return clientProvider.client().read().resource(Patient.class).withId(patientId).execute();
-    } catch (ResourceNotFoundException e) {
-      throw new PatientNotFoundException("Patient with id '" + patientId + "' was not found in the system.");
-    }
-  }
-
 }

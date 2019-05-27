@@ -25,7 +25,6 @@ import org.hl7.fhir.r4.model.CapabilityStatement.ResourceInteractionComponent;
 import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Enumerations;
-import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.MedicationDispense;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Procedure;
@@ -43,8 +42,11 @@ public class ImportService {
   private final IParser parser;
   private final List<String> excludedResources;
 
-  public ImportService(@Autowired IGenericClientProvider clientProvider, @Autowired IParser parser,
-      @Value("${provider.data-import.exclude-resources}") String excludeResourcesString) {
+  public ImportService(
+      @Autowired IGenericClientProvider clientProvider,
+      @Autowired IParser parser,
+      @Value("${payer-b.data-import.exclude-resources}") String excludeResourcesString
+  ) {
     this.clientProvider = clientProvider;
     this.parser = parser;
     this.excludedResources = excludeResourcesString.isEmpty() ? new ArrayList<>() : Arrays.asList(
@@ -144,24 +146,6 @@ public class ImportService {
       documentReference.addContent(content);
       client.create().resource(documentReference).execute();
     }
-  }
-
-  public void importNewIdentifiers(String patientId, String subscriberId, String payerServerUrl,
-      String payerServerToken) {
-    IGenericClient bClient = clientProvider.client();
-    Patient payerBPatient = bClient.read().resource(Patient.class).withId(patientId).execute();
-    List<Identifier> bIdentifiers = payerBPatient.getIdentifier();
-
-    IGenericClient aClient = clientProvider.client(payerServerUrl, payerServerToken);
-    Patient payerApatient = aClient.read().resource(Patient.class).withId(subscriberId).execute();
-
-    for (Identifier aIdentifier : payerApatient.getIdentifier()) {
-      if (!bIdentifiers.contains(aIdentifier)) {
-        bIdentifiers.add(aIdentifier);
-      }
-    }
-
-    bClient.update().resource(payerBPatient).execute();
   }
 
   private boolean canPersist(CapabilityStatement capabilityStatement, String resourceName) {

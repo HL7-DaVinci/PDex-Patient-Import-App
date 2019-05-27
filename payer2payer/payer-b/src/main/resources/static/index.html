@@ -34,21 +34,17 @@
 			</el-form-item>
 
 			<el-form-item label="Coverage">
-				<el-select v-model="context.coverageId">
+				<el-select v-model="context.coverageId" @change="onChange">
 					<el-option
 						v-for="coverage in context.coverages"
 						:label="coverage.payorName"
 						:value="coverage.id"></el-option>
 				</el-select>
+				*required
 			</el-form-item>
 
 			<el-form-item>
-				<<!--el-button type="primary" @click="onSubmit">Import historical data from payer A</el-button>-->
-				<span>Import historical data from payer A:</span>
-				<a href="https://auth.hspconsortium.org/authorize?response_type=code&client_id=04c130da-4849-48cf-b29c-a29d60b08b82&redirect_uri=http://localhost:8080/importhistory&state=w9FIr7yy8mB36dsdcoy70gNoLeubz1qrz&aud=https://api-v8-r4.hspconsortium.org/PayerB/data">
-					https://auth.hspconsortium.org/authorize?response_type=code&client_id=04c130da-4849-48cf-b29c-a29d60b08b82&redirect_uri=http://localhost:8080/importhistory&state=w9FIr7yy8mB36dsdcoy70gNoLeubz1qrz&aud=https://api-v8-r4.hspconsortium.org/PayerB/data
-				</a>
-
+				<el-link type="primary" href="https://auth.hspconsortium.org/authorize?response_type=code&client_id=04c130da-4849-48cf-b29c-a29d60b08b82&state=dddhhh111&aud=https://api-v8-r4.hspconsortium.org/PayerA/data&redirect_uri=http://localhost:8080/importhistory">Import historical data from payer A</el-link>
 			</el-form-item>
 
 
@@ -65,10 +61,10 @@
 	</template>
 
 	<template id="hlx-import-form">
+
 		<el-form v-loading="loading">
 			<el-form-item v-for="(values, key) in records">
-				<el-table :data="values" @selection-change="onSelect($event, key)">
-					<el-table-column type="selection" width="55"></el-table-column>
+				<el-table :data="values">
 					<el-table-column property="display" :label="key | display"></el-table-column>
 				</el-table>
 			</el-form-item>
@@ -77,6 +73,7 @@
 			</el-form-item>
 		</el-form>
 	</template>
+
 	<template id="hlx-smart-form">
 		<hlx-import-form v-if="payerServerUrl"
 			:payer-server-url="payerServerUrl"></hlx-import-form>
@@ -139,6 +136,16 @@
 				});
 			},
 			methods: {
+				onChange() {
+					this.loading = true;
+					const coverageId = this.context.coverageId;
+					axios.get(`/pick-coverage?${qs({coverageId})}`)
+							.catch(error => {
+									this.$message.error(errorMessage(error.response.data.message));
+							}).finally(() => {
+										this.loading = false;
+							});
+				}
 			}
 		});
 
@@ -148,8 +155,7 @@
 			data() {
 				return {
 					loading: false,
-					records: {},
-					selected: {}
+					records: {}
 				}
 			},
 			mounted() {
@@ -172,13 +178,10 @@
 				display: (value) => value.split(".").pop()
 			},
 			methods: {
-				onSelect(values, key) {
-					this.selected[key] = values;
-				},
 				onImport() {
 					let data = {};
-					for (let key in this.selected) {
-						data[key] = this.selected[key].map(record => record.id);
+					for (let key in this.records) {
+						data[key] = this.records[key].map(record => record.id);
 					}
 
 					const payerServerUrl = this.payerServerUrl;
