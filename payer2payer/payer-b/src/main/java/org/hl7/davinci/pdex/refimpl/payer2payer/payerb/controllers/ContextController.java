@@ -3,7 +3,6 @@ package org.hl7.davinci.pdex.refimpl.payer2payer.payerb.controllers;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import org.apache.http.client.utils.URIBuilder;
@@ -14,7 +13,12 @@ import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.oauth2.Oath2Token;
 import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.service.PayerBService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,23 +32,24 @@ public class ContextController {
 
   private final PayerBService payerBService;
   private final RestTemplate restTemplate;
+
   private final String payerAFhirServerUrl;
-  private final String payerAAuthUrl;
+  private final String payerATokenUrl;
   private final String payerAClientId;
+  private final String payerARedirectURI;
 
   @Autowired
-  public ContextController(
-      PayerBService payerBService,
-      RestTemplate restTemplate,
-      @Value("${payer-a.auth-uri}") String payerAAuthUrl,
+  public ContextController(PayerBService payerBService, RestTemplate restTemplate,
+      @Value("${payer-a.token-uri}") String payerATokenUrl,
       @Value("${payer-a.fhir-server-uri}") String payerAFhirServerUrl,
-      @Value("${payer-a.client-id}") String payerAClientId
-  ) {
+      @Value("${payer-a.client-id}") String payerAClientId,
+      @Value("${payer-a.redirect-uri}") String payerARedirectURI) {
     this.payerBService = payerBService;
     this.restTemplate = restTemplate;
     this.payerAFhirServerUrl = payerAFhirServerUrl;
-    this.payerAAuthUrl = payerAAuthUrl;
+    this.payerATokenUrl = payerATokenUrl;
     this.payerAClientId = payerAClientId;
+    this.payerARedirectURI = payerARedirectURI;
   }
 
   @GetMapping("/current-context")
@@ -55,11 +60,8 @@ public class ContextController {
   }
 
   @GetMapping("/pick-coverage")
-  public void selectCoverage(
-      @RequestParam("coverageId") String coverageId,
-      @Valid CurrentContextDto currentContextDto,
-      HttpSession session
-  ){
+  public void selectCoverage(@RequestParam("coverageId") String coverageId, @Valid CurrentContextDto currentContextDto,
+      HttpSession session) {
     CurrentContextResponseDto currentContextDetails = payerBService.getCurrentContextDetails(currentContextDto);
     Optional<CoverageResponseDto> coverage = currentContextDetails.getCoverages().stream().filter(
         cov -> cov.getId().equals(coverageId)).findFirst();
@@ -72,17 +74,22 @@ public class ContextController {
 
   @GetMapping("/importhistory")
   public RedirectView getHistory(@RequestParam("code") String code, @RequestParam("state") String state,
-      HttpSession session, HttpServletResponse response) throws URISyntaxException {
+      HttpSession session) throws URISyntaxException {
     //todo validate state
-    URI uri = new URIBuilder(payerAAuthUrl)
-        .setPath("/token")
-        .setParameter("grant_type", "authorization_code")
-        .setParameter("redirect_uri", "http://localhost:8080/importhistory")
-        .setParameter("client_id", payerAClientId)
-        .setParameter("code", code)
-        .build();
+    URI uri = new URIBuilder(payerATokenUrl).build();
 
-    ResponseEntity<Oath2Token> tokenResponse = restTemplate.postForEntity(uri, null, Oath2Token.class);
+    //Set Form Data
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+    MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+    map.add("grant_type", "authorization_code");
+    map.add("redirect_uri", payerARedirectURI);
+    map.add("client_id", payerAClientId);
+    map.add("code", code);
+    HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
+
+    ResponseEntity<Oath2Token> tokenResponse = restTemplate.postForEntity(uri, request, Oath2Token.class);
     session.setAttribute("history-token", tokenResponse.getBody());
 
     return new RedirectView("/?payerServerUrl=" + payerAFhirServerUrl);
