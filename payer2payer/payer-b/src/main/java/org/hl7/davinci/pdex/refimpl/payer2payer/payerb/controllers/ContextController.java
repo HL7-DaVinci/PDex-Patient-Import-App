@@ -74,8 +74,7 @@ public class ContextController {
   public RedirectView getHistory(@RequestParam("code") String code, @RequestParam("state") String state,
       HttpSession session, HttpServletResponse response) throws URISyntaxException {
     //todo validate state
-    URI uri = new URIBuilder().setScheme("https")
-        .setHost("auth.hspconsortium.org")
+    URI uri = new URIBuilder(payerAAuthUrl)
         .setPath("/token")
         .setParameter("grant_type", "authorization_code")
         .setParameter("redirect_uri", "http://localhost:8080/importhistory")
