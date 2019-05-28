@@ -77,7 +77,7 @@ public class ContextController {
     URI uri = new URIBuilder(payerAAuthUrl)
         .setPath("/token")
         .setParameter("grant_type", "authorization_code")
-        .setParameter("redirect_uri", "http://localhost:8080/importhistory")
+        .setParameter("redirect_uri", "https://payer-b-smart-app.herokuapp.com/importhistory")
         .setParameter("client_id", payerAClientId)
         .setParameter("code", code)
         .build();
