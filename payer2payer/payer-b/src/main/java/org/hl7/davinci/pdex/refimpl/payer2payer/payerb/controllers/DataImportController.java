@@ -43,7 +43,7 @@ public class DataImportController {
     String subscriberId = (String)session.getAttribute("subscriber-id");
     String patientId = (String)session.getAttribute("patient-id");
 
-    importService.importRecords(importIds, subscriberId, payerServerUrl, payerAToken.getAccess_token());
+    importService.importRecords(importIds, patientId, payerServerUrl, payerAToken.getAccess_token());
     identifierImportService.importNewIdentifiers(patientId,subscriberId, payerServerUrl, payerAToken.getAccess_token());
   }
 }
