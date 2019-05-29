@@ -13,40 +13,51 @@
 	<style>
 		body {
 			font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+			margin: 0;
 		}
-    .hlx-logo {
-      float: right;
-    }
-    .hlx-logo > img {
-      float: right;
-      width: 40%;
-    }
+		.hlx-logo {
+			float: right;
+		}
+		.hlx-logo > img {
+			float: right;
+			width: 40%;
+		}
+		#app {
+			min-height: 100vh;
+		}
+		.el-select {
+			width: 100%;
+		}
   </style>
 </head>
 
 <body>
 
 	<template id="hlx-patient-form">
-		<el-form v-loading="loading" :model="context" label-width="120px">
+		<el-form
+			ref="patientForm"
+			:rules="rules"
+			v-loading="loading"
+			:model="context"
+			label-width="120px"
+		>
 
 			<el-form-item label="Patient">
 				<el-input v-model="context.patient.name" :readonly="true"></el-input>
 			</el-form-item>
 
-			<el-form-item label="Coverage">
+			<el-form-item label="Coverage" prop="coverageId">
 				<el-select v-model="context.coverageId" @change="onChange">
 					<el-option
 						v-for="coverage in context.coverages"
 						:label="coverage.payorName"
 						:value="coverage.id"></el-option>
 				</el-select>
-				*required
 			</el-form-item>
 
 			<el-form-item>
-				<el-link type="primary" href="https://auth.hspconsortium.org/authorize?response_type=code&client_id=04c130da-4849-48cf-b29c-a29d60b08b82&state=dddhhh111&aud=https://api-v8-r4.hspconsortium.org/PayerA/data&redirect_uri=https://payer-b-smart-app.herokuapp.com/importhistory">Import historical data from payer A</el-link>
+				<el-button @click="submitForm" type="primary">Import historical data from payer A</el-button>
 			</el-form-item>
-
 
 			<el-card v-if="card">
 				<pre slot="header">{{card.summary}}</pre>
@@ -102,15 +113,12 @@
 	<script>
 		Vue.use(VueRouter);
 		ELEMENT.locale(ELEMENT.lang.en);
-
 		function qs(query = {}) {
 			return Object.entries(query).map(q => q[1] ? q.join("=") : null).filter(Boolean).join("&");
 		}
-
-    function errorMessage(data) {
-      return data ? 'Error: ' + data : 'Error happened.';
-    }
-
+		function errorMessage(data) {
+			return data ? 'Error: ' + data : 'Error happened.';
+		}
 		var hlxPatientForm = Vue.component("hlx-patient-form", {
 			template: "#hlx-patient-form",
 			data() {
@@ -119,10 +127,15 @@
 					context: {
 						patient: {},
 						encounterId: null,
-						coverageId: null,
+						coverageId: undefined,
 						coverages: []
 					},
-					card: null
+					card: null,
+					rules: {
+						coverageId: [
+							{ required: true, message: 'Please select coverage', trigger: 'change' }
+						]
+					}
 				};
 			},
 			mounted() {
@@ -145,10 +158,18 @@
 							}).finally(() => {
 										this.loading = false;
 							});
+				},
+				submitForm() {
+					this.$refs.patientForm.validate(valid => {
+						if (!valid) {
+							return false;
+						}
+
+						window.location.href = "https://authorization.sandboxcerner.com/tenants/0b8a0111-e8e6-4c26-a91c-5069cbc6b1ca/protocols/oauth2/profiles/smart-v1/personas/provider/authorize?response_type=code&client_id=f5d3b266-634c-4a7b-b791-224054fd4d9a&redirect_uri=http://localhost:8080/importhistory&state=w9FIr7yy8mB36dsdcoy70gNoLeubz1qrz&aud=https://fhir-ehr.sandboxcerner.com/r4/0b8a0111-e8e6-4c26-a91c-5069cbc6b1ca&scope=user%2FPatient.read%20user%2FPatient.write%20user%2FEncounter.read%20user%2FProcedure.read%20user%2FMedicationDispense.read%20user%2FAllergyIntolerance.read%20online_access%20openid%20profile";
+					});
 				}
 			}
 		});
-
 		var hlxImportForm = Vue.component("hlx-import-form", {
 			template: "#hlx-import-form",
 			props: ["payerServerUrl"],
@@ -160,7 +181,6 @@
 			},
 			mounted() {
 				const payerServerUrl = this.payerServerUrl;
-
 				this.loading = true;
 				axios.get("/current-context").then(response => {
 					this.context = response.data;
@@ -183,10 +203,8 @@
 					for (let key in this.records) {
 						data[key] = this.records[key].map(record => record.id);
 					}
-
 					const payerServerUrl = this.payerServerUrl;
 					const patientId = this.patientId;
-
 					this.loading = true;
 					axios.post(`/import-records?${qs({payerServerUrl, patientId})}`, data).then(() => {
 						this.$alert(
@@ -206,12 +224,10 @@
 				}
 			}
 		});
-
 		var hlxSmartForm = Vue.component("hlx-smart-form", {
 			template: "#hlx-smart-form",
 			props: ["payerServerUrl", "subscriberId", "patientId"]
 		});
-
 		var router = new VueRouter({
 			mode: "history",
 			routes: [{
@@ -224,7 +240,6 @@
 				})
 			}]
 		});
-
 		var app = new Vue({
 			el: "#app",
 			router

@@ -53,32 +53,40 @@ public class ImportService {
         excludeResourcesString.split(","));
   }
 
-  public Map<Class<? extends Resource>, Set<ImportRecordDto>> getRecordsFromPayer(String subscriberId,
-      String payerServerUrl, String payerServerToken) {
-    IGenericClient payerClient = clientProvider.client(payerServerUrl, payerServerToken);
-    Patient patient = payerClient.read().resource(Patient.class).withId(subscriberId).execute();
+  public Map<Class<? extends Resource>, Set<ImportRecordDto>> getRecordsFromPayer(
+      String subscriberId,
+      String payerServerUrl,
+      String payerServerToken
+  ) {
+    IGenericClient payerAClient = clientProvider.client(payerServerUrl, payerServerToken);
+    Patient patient = payerAClient.read().resource(Patient.class).withId(subscriberId).execute();
     Map<Class<? extends Resource>, Set<ImportRecordDto>> importRecords = new HashMap<>();
 
     //List<Bundle> bundles =
     //Search Encounters
     //TODO search by date and exclude serviceProvider
     //Retrieve only IDs and data for displays. We do not need anything else here.
-
     String patientIdPart = patient.getIdElement().getIdPart();
 
-    Bundle encounters = payerClient.search().forResource(Encounter.class).where(Encounter.SUBJECT.hasId(patientIdPart))
-        .returnBundle(Bundle.class).execute();
-    importRecords.put(Encounter.class, bundleToImportRecords(encounters));
+    CapabilityStatement capabilityStatementB = payerAClient.capabilities().ofType(CapabilityStatement.class).execute();
+
+    if(canRead(capabilityStatementB,Encounter.class.getSimpleName())){
+      Bundle encounters = payerAClient.search().forResource(Encounter.class).where(Encounter.SUBJECT.hasId(patientIdPart))
+          .returnBundle(Bundle.class).execute();
+      importRecords.put(Encounter.class, bundleToImportRecords(encounters));
+    }
 
     //Search Procedures
-    Bundle procedures = payerClient.search().forResource(Procedure.class).where(Procedure.SUBJECT.hasId(patientIdPart))
-        .returnBundle(Bundle.class).execute();
-    importRecords.put(Procedure.class, bundleToImportRecords(procedures));
+    if(canRead(capabilityStatementB,Procedure.class.getSimpleName())) {
+      Bundle procedures = payerAClient.search().forResource(Procedure.class).where(Procedure.SUBJECT.hasId(patientIdPart)).returnBundle(Bundle.class).execute();
+      importRecords.put(Procedure.class, bundleToImportRecords(procedures));
+    }
 
     //Search Medication Dispense
-    Bundle medicationDispenses = payerClient.search().forResource(MedicationDispense.class).where(
-        MedicationDispense.SUBJECT.hasId(patientIdPart)).returnBundle(Bundle.class).execute();
-    importRecords.put(MedicationDispense.class, bundleToImportRecords(medicationDispenses));
+    if(canRead(capabilityStatementB,MedicationDispense.class.getSimpleName())) {
+      Bundle medicationDispenses = payerAClient.search().forResource(MedicationDispense.class).where(MedicationDispense.SUBJECT.hasId(patientIdPart)).returnBundle(Bundle.class).execute();
+      importRecords.put(MedicationDispense.class, bundleToImportRecords(medicationDispenses));
+    }
 
     return importRecords;
   }
@@ -92,13 +100,16 @@ public class ImportService {
     return records;
   }
 
-  public void importRecords(Map<Class<? extends Resource>, Set<String>> importIds, String patientId,
-      String payerServerUrl, String payerServerToken) {
-    IGenericClient client = clientProvider.client();
-    Patient patient = client.read().resource(Patient.class).withId(patientId).execute();
-    CapabilityStatement capabilityStatement = client.capabilities().ofType(CapabilityStatement.class).execute();
+  public void importRecords(
+      Map<Class<? extends Resource>, Set<String>> importIds, String patientId,
+      String payerServerUrl,
+      String payerServerToken
+  ) {
+    IGenericClient payerBClient = clientProvider.client();
+    Patient patient = payerBClient.read().resource(Patient.class).withId(patientId).execute();
+    CapabilityStatement capabilityStatementB = payerBClient.capabilities().ofType(CapabilityStatement.class).execute();
 
-    IGenericClient payerClient = clientProvider.client(payerServerUrl, payerServerToken);
+    IGenericClient payerAClient = clientProvider.client(payerServerUrl, payerServerToken);
 
     //Bundle to persist data to EMR
     Bundle persistBundle = new Bundle();
@@ -115,10 +126,10 @@ public class ImportService {
       Class<? extends Resource> rClass = idsEntry.getKey();
       //Currently no _include is used. We should retrieve all referenced objects as contained resources.
       //This is just a proof of concept to show that we can copy resources from Payer to Provider.
-      Bundle bundle = payerClient.search().forResource(rClass).where(
+      Bundle bundle = payerAClient.search().forResource(rClass).where(
           Resource.RES_ID.exactly().codes(importIds.get(rClass))).returnBundle(Bundle.class).execute();
 
-      boolean canPersist = canPersist(capabilityStatement, rClass.getSimpleName());
+      boolean canPersist = canPersist(capabilityStatementB, rClass.getSimpleName());
       for (BundleEntryComponent entry : bundle.getEntry()) {
         Resource resource = entry.getResource();
         //Set id as null to create a new one on persist.
@@ -126,6 +137,8 @@ public class ImportService {
 
         //Reset old patient reference in Payer system to a new one from EMR
         setPatientReference(resource, patient);
+        //we agreed that for RI it is sufficient handling
+        cutInvalidReferences(resource);
         if (canPersist) {
           persistBundle.addEntry().setResource(resource).getRequest().setMethod(Bundle.HTTPVerb.POST);
         } else {
@@ -134,7 +147,7 @@ public class ImportService {
       }
     }
     if (!persistBundle.getEntry().isEmpty()) {
-      client.transaction().withBundle(persistBundle).execute();
+      payerBClient.transaction().withBundle(persistBundle).execute();
     }
     if (!documentBundle.getEntry().isEmpty()) {
       DocumentReference documentReference = new DocumentReference();
@@ -144,18 +157,35 @@ public class ImportService {
           new DocumentReference.DocumentReferenceContentComponent();
       content.setAttachment(new Attachment().setData(parser.encodeResourceToString(documentBundle).getBytes()));
       documentReference.addContent(content);
-      client.create().resource(documentReference).execute();
+      payerBClient.create().resource(documentReference).execute();
     }
   }
 
   private boolean canPersist(CapabilityStatement capabilityStatement, String resourceName) {
-    Optional<CapabilityStatementRestResourceComponent> res = capabilityStatement.getRest().get(0).getResource().stream()
-        .filter(c -> resourceName.equals(c.getType())).findFirst();
+    return checkCapabilityStatementFor(capabilityStatement, resourceName, "create");
+  }
+
+  private boolean canRead(CapabilityStatement capabilityStatement, String resourceName) {
+    return checkCapabilityStatementFor(capabilityStatement, resourceName, "read");
+  }
+
+  private boolean checkCapabilityStatementFor(
+      CapabilityStatement capabilityStatement,
+      String resourceName,
+      String action
+  ) {
+    Optional<CapabilityStatementRestResourceComponent> res = capabilityStatement.getRest().get(0).getResource()
+        .stream()
+        .filter(c -> resourceName.equals(c.getType()))
+        .findFirst();
+
     if (res.isPresent() && !excludedResources.contains(resourceName)) {
-      Optional<ResourceInteractionComponent> status = res.get().getInteraction().stream().filter(
-          i -> "create".equals(i.getCode().getDisplay())).findFirst();
+      Optional<ResourceInteractionComponent> status = res.get().getInteraction()
+          .stream().filter(i -> action.equals(i.getCode().getDisplay()))
+          .findFirst();
       return status.isPresent();
     }
+
     return false;
   }
 
@@ -169,6 +199,21 @@ public class ImportService {
       ((MedicationDispense) resource).setSubject(ref);
     } else {
       throw new NotImplementedException("Setting Patient reference not supported for type " + resource.getClass());
+    }
+  }
+
+  private void cutInvalidReferences(Resource resource) {
+    if (resource.getClass() == Procedure.class) {
+      //todo
+
+    } else if (resource.getClass() == Encounter.class) {
+      Encounter encounter = (Encounter) resource;
+      encounter.getParticipant().forEach( loc -> loc.setIndividual(new Reference()));
+      encounter.getLocation().forEach( loc -> loc.setLocation(new Reference()));
+      encounter.setServiceProvider(new Reference());
+
+    } else if (resource.getClass() == MedicationDispense.class) {
+      //todo
     }
   }
 }
