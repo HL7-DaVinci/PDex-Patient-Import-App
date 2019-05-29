@@ -112,7 +112,7 @@ public class CallHookService {
     context.put("userId", practitionerId);
     context.put("patientId", patientId);
     context.put("encounter", encounterId);
-    context.put("appointments", new Object[] {});
+    context.put("appointments", null);
     context.put("subscriberId", subscriberId);
 
     CdsRequest cdsRequest = new CdsRequest();
