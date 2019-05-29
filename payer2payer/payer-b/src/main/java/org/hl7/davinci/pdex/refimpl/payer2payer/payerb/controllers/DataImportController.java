@@ -1,5 +1,7 @@
 package org.hl7.davinci.pdex.refimpl.payer2payer.payerb.controllers;
 
+import ca.uhn.fhir.rest.server.exceptions.UnclassifiedServerFailureException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.servlet.http.HttpSession;
@@ -29,7 +31,12 @@ public class DataImportController {
     String subscriberId = (String)session.getAttribute("subscriber-id");
     Assert.notNull(subscriberId, "Subscriber Id should not be null. Please select existing coverage");
     Oath2Token payerAToken = (Oath2Token)session.getAttribute("history-token");
-    return importService.getRecordsFromPayer(subscriberId, payerServerUrl, payerAToken.getAccess_token());
+    //We know that server is unstable, so we will try few times :(
+    return tryToGetRecordsFromPayerA(
+        payerServerUrl,
+        subscriberId,
+        payerAToken
+    );
   }
 
   @PostMapping("/import-records")
@@ -45,5 +52,32 @@ public class DataImportController {
 
     importService.importRecords(importIds, patientId, payerServerUrl, payerAToken.getAccess_token());
     identifierImportService.importNewIdentifiers(patientId,subscriberId, payerServerUrl, payerAToken.getAccess_token());
+  }
+
+  private Map<Class<? extends Resource>, Set<ImportRecordDto>> tryToGetRecordsFromPayerA(
+      String payerServerUrl,
+      String subscriberId,
+      Oath2Token payerAToken
+  ) {
+
+    Map<Class<? extends Resource>, Set<ImportRecordDto>> recordsFromPayer = new HashMap<>();
+
+    int attempts = 1;
+    while(recordsFromPayer.isEmpty() && attempts < 10) {
+      try{
+        recordsFromPayer = importService.getRecordsFromPayer(
+            subscriberId,
+            payerServerUrl,
+            payerAToken.getAccess_token()
+        );
+
+      }catch (UnclassifiedServerFailureException ex){
+        attempts++;
+      }
+    }
+    if(recordsFromPayer.isEmpty()){
+      throw new IllegalStateException("Payer A fhir server is not responding");
+    }
+    return recordsFromPayer;
   }
 }
