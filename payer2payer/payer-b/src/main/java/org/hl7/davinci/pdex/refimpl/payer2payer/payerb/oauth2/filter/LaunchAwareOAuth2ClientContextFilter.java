@@ -20,6 +20,8 @@ public class LaunchAwareOAuth2ClientContextFilter extends OAuth2ClientContextFil
     setRedirectStrategy(this.redirectStrategy);
   }
 
+  //todo handle doFilter because now it is impacted by previous state
+
   @Override
   protected void redirectUser(UserRedirectRequiredException e, HttpServletRequest request, HttpServletResponse response)
       throws IOException {
