@@ -18,13 +18,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http.csrf().disable().headers().frameOptions().disable()
-        .and()
-        .logout()
-        .logoutUrl("/logout") //todo fix better (this ends up in few unsuccessful auth redirects, also this fix is not working if scenario wasn't finished)
-        .logoutSuccessUrl("/")
-        .deleteCookies("JSESSIONID")
-        .permitAll();
+    http.csrf().disable().headers().frameOptions().disable();
 
     super.configure(http);
   }

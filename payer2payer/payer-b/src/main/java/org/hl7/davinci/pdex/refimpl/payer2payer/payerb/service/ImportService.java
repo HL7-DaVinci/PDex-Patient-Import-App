@@ -2,14 +2,6 @@ package org.hl7.davinci.pdex.refimpl.payer2payer.payerb.service;
 
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.dto.ImportRecordDto;
@@ -33,6 +25,15 @@ import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -203,17 +204,12 @@ public class ImportService {
   }
 
   private void cutInvalidReferences(Resource resource) {
-    if (resource.getClass() == Procedure.class) {
-      //todo
-
-    } else if (resource.getClass() == Encounter.class) {
+    if (resource.getClass() == Encounter.class) {
       Encounter encounter = (Encounter) resource;
-      encounter.getParticipant().forEach( loc -> loc.setIndividual(new Reference()));
-      encounter.getLocation().forEach( loc -> loc.setLocation(new Reference()));
+      encounter.getParticipant().forEach(loc -> loc.setIndividual(new Reference()));
+      encounter.getLocation().forEach(loc -> loc.setLocation(new Reference()));
       encounter.setServiceProvider(new Reference());
 
-    } else if (resource.getClass() == MedicationDispense.class) {
-      //todo
     }
   }
 }
