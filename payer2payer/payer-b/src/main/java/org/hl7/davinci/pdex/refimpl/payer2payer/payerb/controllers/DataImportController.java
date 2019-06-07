@@ -8,8 +8,7 @@ import javax.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.dto.ImportRecordDto;
 import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.oauth2.Oath2Token;
-import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.service.IdentifierImportService;
-import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.service.ImportService;
+import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.importer.Importer;
 import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
@@ -23,8 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class DataImportController {
 
-  private final ImportService importService;
-  private final IdentifierImportService identifierImportService;
+  private final Importer importer;
 
   @GetMapping("/get-payer-records")
   public Map<Class<? extends Resource>, Set<ImportRecordDto>> getRecordsFromPayer(@RequestParam String payerServerUrl, HttpSession session) {
@@ -50,8 +48,7 @@ public class DataImportController {
     String subscriberId = (String)session.getAttribute("subscriber-id");
     String patientId = (String)session.getAttribute("patient-id");
 
-    importService.importRecords(importIds, patientId, payerServerUrl, payerAToken.getAccess_token());
-    identifierImportService.importNewIdentifiers(patientId,subscriberId, payerServerUrl, payerAToken.getAccess_token());
+    importer.importRecords(importIds, patientId, subscriberId, payerServerUrl, payerAToken.getAccess_token());
   }
 
   private Map<Class<? extends Resource>, Set<ImportRecordDto>> tryToGetRecordsFromPayerA(
@@ -65,7 +62,7 @@ public class DataImportController {
     int attempts = 1;
     while(recordsFromPayer.isEmpty() && attempts < 10) {
       try{
-        recordsFromPayer = importService.getRecordsFromPayer(
+        recordsFromPayer = importer.getRecordsFromPayer(
             subscriberId,
             payerServerUrl,
             payerAToken.getAccess_token()
