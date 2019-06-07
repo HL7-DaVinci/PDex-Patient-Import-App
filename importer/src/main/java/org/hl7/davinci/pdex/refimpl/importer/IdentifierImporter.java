@@ -1,4 +1,4 @@
-package org.hl7.davinci.pdex.refimpl.payer2payer.payerb.importer;
+package org.hl7.davinci.pdex.refimpl.importer;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import org.hl7.fhir.r4.model.Identifier;

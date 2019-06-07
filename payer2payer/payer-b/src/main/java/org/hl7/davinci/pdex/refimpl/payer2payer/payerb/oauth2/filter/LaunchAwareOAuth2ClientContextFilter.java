@@ -60,14 +60,16 @@ public class LaunchAwareOAuth2ClientContextFilter extends OAuth2ClientContextFil
     DefaultSavedRequest savedRequest = (DefaultSavedRequest) request.getSession().getAttribute(
         "SPRING_SECURITY_SAVED_REQUEST");
 
-    String launch = getSavedRequestParameter(savedRequest, "launch");
-    if (launch != null) {
-      builder.queryParam("launch", launch);
-    }
+    if (savedRequest != null) {
+      String launch = getSavedRequestParameter(savedRequest, "launch");
+      if (launch != null) {
+        builder.queryParam("launch", launch);
+      }
 
-    String iss = getSavedRequestParameter(savedRequest, "iss");
-    if (launch != null) {
-      builder.queryParam("aud", iss);
+      String iss = getSavedRequestParameter(savedRequest, "iss");
+      if (launch != null) {
+        builder.queryParam("aud", iss);
+      }
     }
 
     redirectStrategy.sendRedirect(request, response, builder.build().encode().toUriString());

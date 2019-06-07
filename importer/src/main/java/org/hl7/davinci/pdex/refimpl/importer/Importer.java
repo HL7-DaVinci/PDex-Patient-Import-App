@@ -1,14 +1,11 @@
-package org.hl7.davinci.pdex.refimpl.payer2payer.payerb.importer;
+package org.hl7.davinci.pdex.refimpl.importer;
 
 import ca.uhn.fhir.model.primitive.IdDt;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.util.ElementUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
-import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.dto.ImportRecordDto;
-import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.fhir.DisplayUtil;
-import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.fhir.IGenericClientProvider;
+import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
+import org.hl7.davinci.pdex.refimpl.importer.presentation.DisplayUtil;
+import org.hl7.davinci.pdex.refimpl.importer.presentation.ImportRecordDto;
 import org.hl7.fhir.r4.model.Attachment;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -29,12 +26,7 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Procedure;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,56 +35,46 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-@Slf4j
-@Service
-//todo extract to separate module
 public class Importer {
 
-  private final IGenericClientProvider clientProvider;
   private final IParser parser;
   private final List<String> excludedResources;
 
-  public Importer(
-      @Autowired IGenericClientProvider clientProvider,
-      @Autowired IParser parser,
-      @Value("${payer-a.identifier.system}") String payerAIdentifierSystem,
-      @Value("${payer-b.data-import.exclude-resources}") String excludeResourcesString
-  ) {
-    this.clientProvider = clientProvider;
+  public Importer(IParser parser, List<String> excludedResources) {
     this.parser = parser;
-    this.excludedResources = excludeResourcesString.isEmpty() ? new ArrayList<>() : Arrays.asList(
-        excludeResourcesString.split(","));
+    this.excludedResources = excludedResources;
   }
 
-  public Map<Class<? extends Resource>, Set<ImportRecordDto>> getRecordsFromPayer(
-      String subscriberId,
-      String payerServerUrl,
-      String payerServerToken
-  ) {
-    IGenericClient payerAClient = clientProvider.client(payerServerUrl, payerServerToken);
+  public Map<Class<? extends Resource>, Set<ImportRecordDto>> getRecordsForImport(String subscriberId,
+      IGenericClient payerAClient) {
 
     Parameters outParams = payerAClient.operation()
         .onInstance(new IdDt(subscriberId))
         .named("$everything")
-        .withNoParameters(Parameters.class).execute();
+        .withNoParameters(Parameters.class)
+        .execute();
 
-    Bundle b = (Bundle) outParams.getParameter().get(0).getResource();
-    Patient patient = (Patient)b.getEntry().get(0).getResource();
+    Bundle b = (Bundle) outParams.getParameter()
+        .get(0)
+        .getResource();
+    Patient patient = (Patient) b.getEntry()
+        .get(0)
+        .getResource();
 
     Map<Class<? extends Resource>, Set<ImportRecordDto>> importRecords = new HashMap<>();
 
-
     Bundle page = b;
-    while (page != null){
+    while (page != null) {
 
-      for (BundleEntryComponent bc : page.getEntry()){
+      for (BundleEntryComponent bc : page.getEntry()) {
 
         Resource r = bc.getResource();
-        if(r == patient){
+        if (r == patient) {
           continue;
         }
         Set<ImportRecordDto> importRecordDtos = importRecords.computeIfAbsent(r.getClass(), k -> new HashSet<>());
-        importRecordDtos.add(new ImportRecordDto(r.getIdElement().getIdPart(), DisplayUtil.getDisplay(r)));
+        importRecordDtos.add(new ImportRecordDto(r.getIdElement()
+            .getIdPart(), DisplayUtil.getDisplay(r)));
       }
 
       page = getNextBundle(payerAClient, page);
@@ -100,32 +82,38 @@ public class Importer {
     return importRecords;
   }
 
-  public void importRecords(Map<Class<? extends Resource>, Set<String>> importIds, String subscriberId, String patientId, String payerServerUrl, String payerServerToken) {
-    IGenericClient payerAClient = clientProvider.client(payerServerUrl, payerServerToken);
-    IGenericClient payerBClient = clientProvider.client();
+  public void importRecords(String patientId,String subscriberId,  IGenericClient payerAClient,
+      IGenericClient payerBClient) {
 
     Parameters outParams = payerAClient.operation()
-        .onInstance(new IdDt("Patient/" + subscriberId))
+        .onInstance(new IdDt(subscriberId))
         .named("$everything")
-        .withNoParameters(Parameters.class).execute();
+        .withNoParameters(Parameters.class)
+        .execute();
 
-    CapabilityStatement capabilityStatementB = payerBClient.capabilities().ofType(CapabilityStatement.class).execute();
+    CapabilityStatement capabilityStatementB = payerBClient.capabilities()
+        .ofType(CapabilityStatement.class)
+        .execute();
 
-    Bundle firstPage = (Bundle) outParams.getParameter().get(0).getResource();
-    Patient patient = (Patient)firstPage.getEntry().get(0).getResource();
+    Bundle firstPage = (Bundle) outParams.getParameter()
+        .get(0)
+        .getResource();
+    Patient patient = (Patient) firstPage.getEntry()
+        .get(0)
+        .getResource();
 
     Bundle page = firstPage;
-    while (page != null){
+    while (page != null) {
 
       Bundle persistBundle = new Bundle();
       persistBundle.setType(BundleType.TRANSACTION);
       Bundle documentBundle = new Bundle();
       persistBundle.setType(BundleType.TRANSACTION);
 
-      for (BundleEntryComponent bc : page.getEntry()){
+      for (BundleEntryComponent bc : page.getEntry()) {
 
         Resource resource = bc.getResource();
-        if(resource == patient){
+        if (resource == patient) {
           continue;
         }
 
@@ -139,11 +127,17 @@ public class Importer {
         cutInvalidReferences(resource);
         //
 
-        if(canPersist(capabilityStatementB, resource.getClass().getSimpleName())){
-          System.out.println("Adding to bundle " + resource.getClass().getSimpleName());
-          persistBundle.addEntry().setResource(resource).getRequest().setMethod(Bundle.HTTPVerb.POST);
-        }else {
-          System.out.println("Adding to document ref bundle  " + resource.getClass().getSimpleName());
+        if (canPersist(capabilityStatementB, resource.getClass()
+            .getSimpleName())) {
+          System.out.println("Adding to bundle " + resource.getClass()
+              .getSimpleName());
+          persistBundle.addEntry()
+              .setResource(resource)
+              .getRequest()
+              .setMethod(Bundle.HTTPVerb.POST);
+        } else {
+          System.out.println("Adding to document ref bundle  " + resource.getClass()
+              .getSimpleName());
           documentBundle.addEntry()
               .setResource(resource)
               .getRequest()
@@ -151,19 +145,33 @@ public class Importer {
         }
 
       }
-      if (!persistBundle.getEntry().isEmpty()) {
-        System.out.println("Persisting bundle of size " + persistBundle.getEntry().size() );
-        payerBClient.transaction().withBundle(persistBundle).execute();
+
+      if (!persistBundle.getEntry()
+          .isEmpty()) {
+        System.out.println("Persisting bundle of size " + persistBundle.getEntry()
+            .size());
+
+        try{
+          payerBClient.transaction()
+              .withBundle(persistBundle)
+              .execute();
+        }catch (InvalidRequestException invalidRequestException){
+          System.out.println(invalidRequestException.getMessage());
+        }
       }
-      if (!documentBundle.getEntry().isEmpty()) {
+      if (!documentBundle.getEntry()
+          .isEmpty()) {
         DocumentReference documentReference = new DocumentReference();
         documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
-        documentReference.setSubject(new Reference("Patient/" + patient.getIdElement().getIdPart()));
+        documentReference.setSubject(new Reference(patient));
         DocumentReference.DocumentReferenceContentComponent content =
             new DocumentReference.DocumentReferenceContentComponent();
-        content.setAttachment(new Attachment().setData(parser.encodeResourceToString(documentBundle).getBytes()));
-        documentReference.addContent( );
-        payerBClient.create().resource(documentReference).execute();
+        content.setAttachment(new Attachment().setData(parser.encodeResourceToString(documentBundle)
+            .getBytes()));
+        documentReference.addContent();
+        payerBClient.create()
+            .resource(documentReference)
+            .execute();
       }
 
       page = getNextBundle(payerAClient, page);
@@ -172,11 +180,11 @@ public class Importer {
   }
 
   private Bundle getNextBundle(IGenericClient payerAClient, Bundle page) {
-    if(page.getLink(Bundle.LINK_NEXT) != null){
+    if (page.getLink(Bundle.LINK_NEXT) != null) {
       page = payerAClient.loadPage()
           .next(page)
           .execute();
-    }else{
+    } else {
       page = null;
     }
     return page;
@@ -188,12 +196,20 @@ public class Importer {
 
   private boolean checkCapabilityStatementFor(CapabilityStatement capabilityStatement, String resourceName,
       String action) {
-    Optional<CapabilityStatementRestResourceComponent> res = capabilityStatement.getRest().get(0).getResource().stream()
-        .filter(c -> resourceName.equals(c.getType())).findFirst();
+    Optional<CapabilityStatementRestResourceComponent> res = capabilityStatement.getRest()
+        .get(0)
+        .getResource()
+        .stream()
+        .filter(c -> resourceName.equals(c.getType()))
+        .findFirst();
 
     if (res.isPresent() && !excludedResources.contains(resourceName)) {
-      Optional<ResourceInteractionComponent> status = res.get().getInteraction().stream().filter(
-          i -> action.equals(i.getCode().getDisplay())).findFirst();
+      Optional<ResourceInteractionComponent> status = res.get()
+          .getInteraction()
+          .stream()
+          .filter(i -> action.equals(i.getCode()
+              .getDisplay()))
+          .findFirst();
       return status.isPresent();
     }
 
@@ -201,25 +217,26 @@ public class Importer {
   }
 
   private void setPatientReference(Resource resource, Patient patient) {
-    Reference ref = new Reference("Patient/" + patient.getIdElement().getIdPart());
+    Reference ref = new Reference("Patient/" + patient.getIdElement()
+        .getIdPart());
     if (resource.getClass() == Procedure.class) {
       ((Procedure) resource).setSubject(ref);
     } else if (resource.getClass() == Encounter.class) {
       ((Encounter) resource).setSubject(ref);
     } else if (resource.getClass() == MedicationDispense.class) {
       ((MedicationDispense) resource).setSubject(ref);
-    }
-    else if (resource.getClass() == Observation.class) {
-      ((Observation) resource).setSubject(ref);
+    } else if (resource.getClass() == Observation.class) {
+      Observation observation = (Observation) resource;
+      observation.setSubject(ref);
     } else if (resource.getClass() == DocumentReference.class) {
       ((DocumentReference) resource).setSubject(ref);
     } else if (resource.getClass() == Coverage.class) {
       //((Coverage) resource).set(ref);
-      } else if (resource.getClass() == Organization.class) {
+    } else if (resource.getClass() == Organization.class) {
       // todo link all together
     } else if (resource.getClass() == MedicationRequest.class) {
       ((MedicationRequest) resource).setSubject(ref);
-    }else {
+    } else {
       System.out.println("Setting Patient reference not supported for type" + resource.getClass());
       //throw new NotImplementedException("Setting Patient reference not supported for type " + resource.getClass());
     }
@@ -228,8 +245,10 @@ public class Importer {
   private void cutInvalidReferences(Resource resource) {
     if (resource.getClass() == Encounter.class) {
       Encounter encounter = (Encounter) resource;
-      encounter.getParticipant().forEach(loc -> loc.setIndividual(new Reference()));
-      encounter.getLocation().forEach(loc -> loc.setLocation(new Reference()));
+      encounter.getParticipant()
+          .forEach(loc -> loc.setIndividual(new Reference()));
+      encounter.getLocation()
+          .forEach(loc -> loc.setLocation(new Reference()));
       encounter.setServiceProvider(new Reference());
     }
     if (resource.getClass() == Coverage.class) {

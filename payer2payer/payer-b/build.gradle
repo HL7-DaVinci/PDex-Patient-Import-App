@@ -21,6 +21,7 @@ dependencies {
     compile 'ca.uhn.hapi.fhir:hapi-fhir-client:3.7.0'
     
     compile project(':cds-hooks-model')
+    compile project(':importer')
     
     testCompile 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
 }

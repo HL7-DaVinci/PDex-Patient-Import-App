@@ -53,7 +53,7 @@ public class ContextController {
     Optional<CoverageResponseDto> coverage = currentContextDetails.getCoverages().stream().filter(
         cov -> cov.getId().equals(coverageId)).findFirst();
     if (coverage.isPresent()) {
-      session.setAttribute("subscriber-id", coverage.get().getSubscriberId());
+      session.setAttribute("subscriber-id", coverage.get().getSubscriber());
     } else {
       throw new IllegalArgumentException("Wrong coverage id");
     }

@@ -1,4 +1,4 @@
-package org.hl7.davinci.pdex.refimpl.payer2payer.payerb.dto;
+package org.hl7.davinci.pdex.refimpl.importer.presentation;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
