@@ -1,4 +1,4 @@
-package org.hl7.davinci.pdex.refimpl.importer;
+package org.hl7.davinci.pdex.refimpl.importer.mapper;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import org.hl7.fhir.r4.model.Identifier;
@@ -6,12 +6,12 @@ import org.hl7.fhir.r4.model.Patient;
 
 import java.util.List;
 
-class IdentifierImporter {
+class IdentifierMapper {
 
   IGenericClient aClient;
   IGenericClient bClient;
 
-  IdentifierImporter(IGenericClient aClient, IGenericClient bClient) {
+  IdentifierMapper(IGenericClient aClient, IGenericClient bClient) {
     this.aClient = aClient;
     this.bClient = bClient;
   }

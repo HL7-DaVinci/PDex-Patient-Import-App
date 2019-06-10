@@ -2,6 +2,7 @@ package org.hl7.davinci.pdex.refimpl.payer2payer.payerb.config;
 
 import ca.uhn.fhir.parser.IParser;
 import org.hl7.davinci.pdex.refimpl.importer.Importer;
+import org.hl7.davinci.pdex.refimpl.importer.TargetConfiguration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,8 +14,9 @@ public class ImporterConfig {
 
   @Bean
   public Importer importer(IParser iParser,
-      @Value("${payer-b.data-import.exclude-resources}") List<String> excludeResources) {
-    return new Importer(iParser, excludeResources);
+      @Value("${payer-b.data-import.exclude-resources}") List<String> excludeResources,
+      @Value("${npi.system}") String npiSystem) {
+    return new Importer(new TargetConfiguration(iParser, excludeResources, npiSystem));
   }
 
 }

@@ -2,12 +2,14 @@ package org.hl7.davinci.pdex.refimpl.payer2payer.payerb.controllers;
 
 import ca.uhn.fhir.rest.server.exceptions.UnclassifiedServerFailureException;
 import lombok.RequiredArgsConstructor;
+import org.hl7.davinci.pdex.refimpl.importer.ImportRequest;
 import org.hl7.davinci.pdex.refimpl.importer.Importer;
 import org.hl7.davinci.pdex.refimpl.importer.presentation.ImportRecordDto;
 import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.fhir.IGenericClientProvider;
 import org.hl7.davinci.pdex.refimpl.payer2payer.payerb.oauth2.Oath2Token;
 import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,11 +23,18 @@ import java.util.Map;
 import java.util.Set;
 
 @RestController
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class DataImportController {
 
   private final Importer importer;
   private final IGenericClientProvider genericClientProvider;
+  private final String receivedSystem;
+
+  @Autowired
+  public DataImportController(Importer importer, IGenericClientProvider genericClientProvider, @Value("${payer-a.system}") String receivedSystem) {
+    this.importer = importer;
+    this.genericClientProvider = genericClientProvider;
+    this.receivedSystem = receivedSystem;
+  }
 
   @GetMapping("/get-payer-records")
   public Map<Class<? extends Resource>, Set<ImportRecordDto>> getRecordsFromPayer(@RequestParam String payerServerUrl,
@@ -45,8 +54,11 @@ public class DataImportController {
     String subscriberId = (String) session.getAttribute("subscriber-id");
     String patientId = (String) session.getAttribute("patient-id");
 
-    importer.importRecords(patientId, subscriberId, genericClientProvider.client(),
-        genericClientProvider.client(payerServerUrl, payerAToken.getAccess_token()));
+
+    ImportRequest importRequest = new ImportRequest(receivedSystem,
+        genericClientProvider.client(payerServerUrl, payerAToken.getAccess_token()), subscriberId, patientId);
+    importer.temporaryFix(genericClientProvider.client());
+    importer.importRecords(importRequest);
   }
 
   private Map<Class<? extends Resource>, Set<ImportRecordDto>> tryToGetRecordsFromPayerA(String payerServerUrl,
@@ -57,8 +69,9 @@ public class DataImportController {
     int attempts = 1;
     while (recordsFromPayer.isEmpty() && attempts < 10) {
       try {
-        recordsFromPayer = importer.getRecordsForImport(subscriberId,
-            genericClientProvider.client(payerServerUrl, payerAToken.getAccess_token()));
+        ImportRequest importRequest = new ImportRequest("",
+            genericClientProvider.client(payerServerUrl, payerAToken.getAccess_token()), subscriberId, null);
+        recordsFromPayer = importer.getRecordsForImport(importRequest);
       } catch (UnclassifiedServerFailureException ex) {
         attempts++;
       }
