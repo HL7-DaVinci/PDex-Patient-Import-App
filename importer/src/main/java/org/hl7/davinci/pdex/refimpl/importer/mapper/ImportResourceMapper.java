@@ -15,11 +15,11 @@ public class ImportResourceMapper {
   }
 
   public Resource map(Reference reference, ImportRequest importRequest){
-    return new OrganizationMapper(targetConfiguration).readOrCreate(reference, importRequest);
+    return new OrganizationMapper(targetConfiguration).readOrCreate(reference, importRequest, null );
   }
 
   public Resource map(Resource resource, ImportRequest importRequest){
-    return new OrganizationMapper(targetConfiguration).readOrCreate((Organization) resource, importRequest);
+    return new OrganizationMapper(targetConfiguration).readOrCreate((Organization) resource, importRequest,null);
   }
 
 }
