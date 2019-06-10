@@ -9,18 +9,11 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
+@AllArgsConstructor
 public class TargetConfiguration {
 
   private final IParser parser;
   private final List<String> excludedResources;
   private final String npiSystem;
 
-  @Setter
-  IGenericClient client;
-
-  public TargetConfiguration(IParser parser, List<String> excludedResources, String npiSystem) {
-    this.parser = parser;
-    this.excludedResources = excludedResources;
-    this.npiSystem = npiSystem;
-  }
 }

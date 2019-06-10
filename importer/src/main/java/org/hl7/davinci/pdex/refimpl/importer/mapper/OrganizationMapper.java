@@ -73,7 +73,7 @@ class OrganizationMapper {
   }
 
   Organization readOrCreate(Reference receivedOrganization, ImportRequest importRequest) {
-    Organization readOrganization = importRequest.getClient().read()
+    Organization readOrganization = importRequest.getReceivedClient().read()
         .resource(Organization.class)
         .withId(receivedOrganization.getReference())
         .execute();

@@ -1,4 +1,4 @@
-package org.hl7.davinci.pdex.refimpl.importer.presentation;
+package org.hl7.davinci.pdex.refimpl.importer.preview;
 
 import ca.uhn.fhir.model.api.IResource;
 import ca.uhn.fhir.parser.DataFormatException;
@@ -11,9 +11,9 @@ import org.hl7.fhir.instance.model.api.IDomainResource;
 import org.hl7.fhir.r4.model.Resource;
 
 @UtilityClass
-public class DisplayUtil {
+class DisplayUtil {
 
-  public String getDisplay(Resource theResource) {
+  String getDisplay(Resource theResource) {
     StringBuilder stringBuilder = new StringBuilder();
     if (theResource instanceof IResource) {
       IResource resource = (IResource) theResource;

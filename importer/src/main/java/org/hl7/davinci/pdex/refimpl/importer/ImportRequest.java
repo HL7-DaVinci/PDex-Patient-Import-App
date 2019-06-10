@@ -8,11 +8,10 @@ import lombok.Getter;
 @AllArgsConstructor
 public class ImportRequest {
 
+  private final IGenericClient receivedClient;
   private final String receivedSystem;
+  private final String subscriberId;
 
-  private final IGenericClient client;
-
-  private final String subscriverId;
   private final String patientId;
 
 }
