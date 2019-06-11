@@ -24,7 +24,7 @@ class OrganizationMapper {
    * Method searches for corresponding Organization using NPI and resource ID. If nothing found organization is
    * created.
    */
-  Organization readOrCreate(Organization receivedOrganization, ImportRequest importRequest, IGenericClient targetClient) {
+  Organization readOrCreate(Organization receivedOrganization, ImportRequest importRequest) {
     Optional<Identifier> first = receivedOrganization.getIdentifier()
         .stream()
         .filter(identifier1 -> targetConfiguration.getNpiSystem().equals(identifier1.getSystem()))
@@ -33,7 +33,7 @@ class OrganizationMapper {
     Organization targetOrganization = null;
     if (first.isPresent()) {
       Identifier identifier = first.get();
-      List<Bundle.BundleEntryComponent> bundleEntryComponent = targetClient.search()
+      List<Bundle.BundleEntryComponent> bundleEntryComponent = importRequest.getTargetClient().search()
           .forResource(Organization.class)
           .where(Organization.IDENTIFIER.exactly()
               .systemAndIdentifier(targetConfiguration.getNpiSystem(), identifier.getValue()))
@@ -45,7 +45,7 @@ class OrganizationMapper {
             .getResource();
       }
     } else {
-      List<Bundle.BundleEntryComponent> bundleEntryComponent = targetClient.search()
+      List<Bundle.BundleEntryComponent> bundleEntryComponent = importRequest.getTargetClient().search()
           .forResource(Organization.class)
           .where(Organization.IDENTIFIER.exactly()
               .systemAndIdentifier(importRequest.getReceivedSystem(), receivedOrganization.getId()))
@@ -65,7 +65,7 @@ class OrganizationMapper {
       identifiers.add(new Identifier().setSystem(importRequest.getReceivedSystem())
           .setValue(receivedOrganization.getId()));
       Organization organizationToCreate = new Organization().setIdentifier(identifiers);
-      targetOrganization = (Organization) targetClient.create()
+      targetOrganization = (Organization) importRequest.getTargetClient().create()
           .resource(organizationToCreate)
           .execute()
           .getResource();
@@ -73,12 +73,12 @@ class OrganizationMapper {
     return targetOrganization;
   }
 
-  Organization readOrCreate(Reference receivedOrganization, ImportRequest importRequest, IGenericClient targetClient) {
+  Organization readOrCreate(Reference receivedOrganization, ImportRequest importRequest) {
     Organization readOrganization = importRequest.getReceivedClient().read()
         .resource(Organization.class)
         .withId(receivedOrganization.getReference())
         .execute();
-    return readOrCreate(readOrganization, importRequest, targetClient);
+    return readOrCreate(readOrganization, importRequest);
   }
 
 }

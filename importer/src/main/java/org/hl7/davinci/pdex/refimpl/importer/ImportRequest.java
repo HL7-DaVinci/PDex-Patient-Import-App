@@ -13,5 +13,6 @@ public class ImportRequest {
   private final String subscriberId;
 
   private final String patientId;
+  private final IGenericClient targetClient;
 
 }

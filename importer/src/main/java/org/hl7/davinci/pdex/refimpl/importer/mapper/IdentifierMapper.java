@@ -6,6 +6,7 @@ import org.hl7.fhir.r4.model.Patient;
 
 import java.util.List;
 
+//todo use again
 class IdentifierMapper {
 
   IGenericClient aClient;

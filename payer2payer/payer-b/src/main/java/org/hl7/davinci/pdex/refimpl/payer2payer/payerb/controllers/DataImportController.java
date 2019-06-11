@@ -11,10 +11,13 @@ import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -70,8 +73,10 @@ public class DataImportController {
             genericClientProvider.client(payerServerUrl, payerAToken.getAccess_token()),
             receivedSystem,
             subscriberId,
-            patientId);
-    importer.importRecords(importRequest, genericClientProvider.client());
+            patientId,
+            genericClientProvider.client()
+    );
+    importer.importRecords(importRequest);
   }
 
 }

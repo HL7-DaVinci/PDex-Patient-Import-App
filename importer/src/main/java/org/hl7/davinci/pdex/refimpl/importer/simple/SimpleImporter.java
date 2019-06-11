@@ -23,9 +23,9 @@ public class SimpleImporter implements Importer {
     }
 
     @Override
-    public void importRecords(ImportRequest importRequest, IGenericClient targetClient) {
+    public void importRecords(ImportRequest importRequest) {
         Bundle firstPage = readFirstPage(importRequest);
-        TargetCapability targetCapability = readTargetCapability(targetClient);
+        TargetCapability targetCapability = readTargetCapability(importRequest.getTargetClient());
         Patient patient = (Patient) firstPage.getEntryFirstRep().getResource();
 
         Bundle page = firstPage;
@@ -38,7 +38,7 @@ public class SimpleImporter implements Importer {
                 if (resource == patient) {
                     continue;
                 }
-                mapResourceReferences(resource, importRequest);
+                mapper.mapResourceReferences(resource, importRequest);
 
                 //Set id as null to create a new one on persist.
                 resource.setId((String) null);
@@ -51,12 +51,11 @@ public class SimpleImporter implements Importer {
                     toRefer.add(resource);
                 }
             }
-            persist(targetClient, toPersist);
-            refer(targetClient, toRefer, patient);
+            persist(importRequest.getTargetClient(), toPersist);
+            refer(importRequest.getTargetClient(), toRefer, patient);
 
-            page = getNextBundle(importRequest.getReceivedClient(), page);
+            page = getNextPage(importRequest.getReceivedClient(), page);
         }
-
     }
 
     private void persist(IGenericClient targetClient, List<Resource> toPersist) {
@@ -108,7 +107,6 @@ public class SimpleImporter implements Importer {
         }
     }
 
-    //todo received client?
     private Bundle readFirstPage(ImportRequest importRequest) {
         Parameters outParams = importRequest.getReceivedClient()
                 .operation()
@@ -120,7 +118,7 @@ public class SimpleImporter implements Importer {
         return (Bundle) outParams.getParameterFirstRep().getResource();
     }
 
-    private Bundle getNextBundle(IGenericClient payerAClient, Bundle page) {
+    private Bundle getNextPage(IGenericClient payerAClient, Bundle page) {
         if (page.getLink(Bundle.LINK_NEXT) != null) {
             page = payerAClient.loadPage()
                     .next(page)
@@ -131,7 +129,6 @@ public class SimpleImporter implements Importer {
         return page;
     }
 
-    //todo move to target client
     private TargetCapability readTargetCapability(IGenericClient targetClient) {
         CapabilityStatement capabilityStatementB = targetClient
                 .capabilities()
@@ -140,44 +137,4 @@ public class SimpleImporter implements Importer {
 
         return new TargetCapability(capabilityStatementB, targetConfiguration.getExcludedResources());
     }
-
-  //We map here only simple references, in real use case ALL references should be mapped
-  private void mapResourceReferences(Resource resource, ImportRequest importRequest) {
-    Reference patientRef = new Reference(importRequest.getPatientId());
-    if (resource.getClass() == Procedure.class) {
-      ((Procedure) resource).setSubject(patientRef);
-    } else if (resource.getClass() == Encounter.class) {
-      Encounter encounter = (Encounter) resource;
-      encounter.setSubject(patientRef);
-      encounter.getParticipant()
-          .forEach(loc -> loc.setIndividual(new Reference()));
-      encounter.getLocation()
-          .forEach(loc -> loc.setLocation(new Reference()));
-
-      encounter.setServiceProvider(new Reference(mapper.map(encounter.getServiceProvider(),importRequest)));
-    } else if (resource.getClass() == MedicationDispense.class) {
-      ((MedicationDispense) resource).setSubject(patientRef);
-    } else if (resource.getClass() == Observation.class) {
-      Observation observation = (Observation) resource;
-      observation.setSubject(patientRef);
-    } else if (resource.getClass() == DocumentReference.class) {
-      ((DocumentReference) resource).setSubject(patientRef);
-    } else if (resource.getClass() == Coverage.class) {
-      Coverage coverage = ((Coverage) resource);
-      coverage.setSubscriber(patientRef);
-      List<Reference> newReferences = new ArrayList<>();
-      for (Reference reference : coverage.getPayor()) {
-        newReferences.add(new Reference(mapper.map(reference, importRequest)));
-      }
-      coverage.setPayor(newReferences);
-
-    } else if (resource.getClass() == Organization.class) {
-      mapper.map(resource, importRequest);
-    } else if (resource.getClass() == MedicationRequest.class) {
-      ((MedicationRequest) resource).setSubject(patientRef);
-    } else {
-      System.out.println("Mapping references not supported for type" + resource.getClass());
-      //throw new NotImplementedException("Setting Patient reference not supported for type " + resource.getClass());
-    }
-  }
 }

@@ -4,7 +4,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public interface Importer {
 
-  void importRecords(ImportRequest importRequest, IGenericClient targetClient);
+  void importRecords(ImportRequest importRequest);
 
 }
 
