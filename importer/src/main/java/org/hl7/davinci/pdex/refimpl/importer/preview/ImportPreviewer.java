@@ -42,6 +42,7 @@ public class ImportPreviewer {
             }
 
             page = loadNextPage(page, previewRequest);
+            System.out.println("Page preloaded, next = " + page.getLink(Bundle.LINK_NEXT) );
         }
         return importRecords;
     }

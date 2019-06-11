@@ -20,10 +20,12 @@ public class ImportResourceMapper {
 
   private OrganizationMapper organizationMapper;
   private PractitionerMapper practitionerMapper;
+  private LocationMapper locationMapper;
 
   public ImportResourceMapper(TargetConfiguration targetConfiguration) {
     organizationMapper = new OrganizationMapper(targetConfiguration);
     practitionerMapper = new PractitionerMapper(targetConfiguration);
+    this.locationMapper = new LocationMapper(targetConfiguration);
   }
 
   //We mapOrganization only simple references, in real use case ALL references should be mapped
@@ -40,7 +42,7 @@ public class ImportResourceMapper {
     } else if (resource.getClass() == DocumentReference.class) {
       mapDocumentReference((DocumentReference) resource, patientRef);
     } else if (resource.getClass() == Coverage.class) {
-      mapCOverage((Coverage) resource, importRequest, patientRef);
+      mapCoverage((Coverage) resource, importRequest, patientRef);
     } else if (resource.getClass() == Organization.class) {
       organizationMapper.readOrCreate((Organization) resource, importRequest);
     } else if (resource.getClass() == MedicationRequest.class) {
@@ -51,7 +53,7 @@ public class ImportResourceMapper {
     }
   }
 
-  private void mapCOverage(Coverage resource, ImportRequest importRequest, Reference patientRef) {
+  private void mapCoverage(Coverage resource, ImportRequest importRequest, Reference patientRef) {
     resource.setSubscriber(patientRef);
     List<Reference> newReferences = new ArrayList<>();
     for (Reference reference : resource.getPayor()) {
@@ -81,7 +83,10 @@ public class ImportResourceMapper {
         });
 
     resource.getLocation()
-        .forEach(loc -> loc.setLocation(new Reference()));
+        .forEach(loc -> {
+          Reference receivedLocation = loc.getLocation();
+          loc.setLocation(new Reference(locationMapper.readOrCreate(receivedLocation, importRequest)));
+        });
 
     resource.setServiceProvider(
         new Reference(organizationMapper.readOrCreate(resource.getServiceProvider(), importRequest)));

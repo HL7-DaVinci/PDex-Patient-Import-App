@@ -1,6 +1,5 @@
 package org.hl7.davinci.pdex.refimpl.importer.mapper;
 
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import org.hl7.davinci.pdex.refimpl.importer.ImportRequest;
 import org.hl7.davinci.pdex.refimpl.importer.TargetConfiguration;
 import org.hl7.fhir.r4.model.Bundle;
@@ -30,47 +29,67 @@ class OrganizationMapper {
         .filter(identifier1 -> targetConfiguration.getNpiSystem().equals(identifier1.getSystem()))
         .findFirst();
 
-    Organization targetOrganization = null;
+    Organization targetOrganization;
     if (first.isPresent()) {
-      Identifier identifier = first.get();
-      List<Bundle.BundleEntryComponent> bundleEntryComponent = importRequest.getTargetClient().search()
-          .forResource(Organization.class)
-          .where(Organization.IDENTIFIER.exactly()
-              .systemAndIdentifier(targetConfiguration.getNpiSystem(), identifier.getValue()))
-          .returnBundle(Bundle.class)
-          .execute()
-          .getEntry();
-      if (!bundleEntryComponent.isEmpty()) {
-        targetOrganization = (Organization) bundleEntryComponent.get(0)
-            .getResource();
-      }
+      targetOrganization = lookByNpi(importRequest, first.get());
     } else {
-      List<Bundle.BundleEntryComponent> bundleEntryComponent = importRequest.getTargetClient().search()
-          .forResource(Organization.class)
-          .where(Organization.IDENTIFIER.exactly()
-              .systemAndIdentifier(importRequest.getReceivedSystem(), receivedOrganization.getId()))
-          .returnBundle(Bundle.class)
-          .execute()
-          .getEntry();
-      if (!bundleEntryComponent.isEmpty()) {
-        targetOrganization = (Organization) bundleEntryComponent.get(0)
-            .getResource();
-      }
+      targetOrganization = lookByIdentifiers(getReceivedIdentifier(receivedOrganization), importRequest);
     }
     if (targetOrganization == null) {
-      List<Identifier> identifiers = new ArrayList<>();
-      if (first.isPresent()) {
-        identifiers.add(first.get());
-      }
-      identifiers.add(new Identifier().setSystem(importRequest.getReceivedSystem())
-          .setValue(receivedOrganization.getId()));
-      Organization organizationToCreate = new Organization().setIdentifier(identifiers);
-      targetOrganization = (Organization) importRequest.getTargetClient().create()
-          .resource(organizationToCreate)
-          .execute()
-          .getResource();
+      targetOrganization = createOrganization(receivedOrganization, importRequest, first);
     }
     return targetOrganization;
+  }
+
+  private Organization createOrganization(Organization receivedOrganization, ImportRequest importRequest, Optional<Identifier> first) {
+    Organization targetOrganization;
+    List<Identifier> identifiers = new ArrayList<>();
+    if (first.isPresent()) {
+      identifiers.add(first.get());
+    }
+    identifiers.add(new Identifier().setSystem(importRequest.getReceivedSystem())
+        .setValue(receivedOrganization.getId()));
+    Organization organizationToCreate = new Organization().setIdentifier(identifiers);
+    targetOrganization = (Organization) importRequest.getTargetClient().create()
+        .resource(organizationToCreate)
+        .execute()
+        .getResource();
+    return targetOrganization;
+  }
+
+  private String getReceivedIdentifier(Organization receivedPractitioner) {
+    return receivedPractitioner.getId();//todo probably this should look at Identifiers
+  }
+
+  private Organization lookByNpi(ImportRequest importRequest, Identifier identifier) {
+    List<Bundle.BundleEntryComponent> bundleEntryComponent = importRequest.getTargetClient().search()
+            .forResource(Organization.class)
+            .where(Organization.IDENTIFIER.exactly()
+                    .systemAndIdentifier(targetConfiguration.getNpiSystem(), identifier.getValue()))
+            .returnBundle(Bundle.class)
+            .execute()
+            .getEntry();
+    if (!bundleEntryComponent.isEmpty()) {
+      return (Organization) bundleEntryComponent.get(0)
+              .getResource();
+    }else {
+      return null;
+    }
+  }
+
+  private Organization lookByIdentifiers(String  receivedOrganizationId, ImportRequest importRequest) {
+    List<Bundle.BundleEntryComponent> bundleEntryComponent = importRequest.getTargetClient().search()
+        .forResource(Organization.class)
+        .where(Organization.IDENTIFIER.exactly()
+            .systemAndIdentifier(importRequest.getReceivedSystem(), receivedOrganizationId))
+        .returnBundle(Bundle.class)
+        .execute()
+        .getEntry();
+    if (!bundleEntryComponent.isEmpty()) {
+      return (Organization) bundleEntryComponent.get(0)
+          .getResource();
+    }
+    return null;
   }
 
   Organization readOrCreate(Reference receivedOrganization, ImportRequest importRequest) {

@@ -35,26 +35,32 @@ class PractitionerMapper {
             .equals(identifier.getSystem()))
         .findFirst();
 
-    Practitioner targetPractitioner = null;
+    Practitioner targetPractitioner;
     if (first.isPresent()) {
       targetPractitioner = findByNPI(importRequest, first.get());
     } else {
       targetPractitioner = findByReceivedIdentifier(getReceivedIdentifier(receivedPractitioner), importRequest);
     }
     if (targetPractitioner == null) {
-      List<Identifier> identifiers = new ArrayList<>();
-      if (first.isPresent()) {
-        identifiers.add(first.get());
-      }
-      identifiers.add(new Identifier().setSystem(importRequest.getReceivedSystem())
-          .setValue(receivedPractitioner.getId()));
-      Practitioner organizationToCreate = new Practitioner().setIdentifier(identifiers);
-      targetPractitioner = (Practitioner) importRequest.getTargetClient()
-          .create()
-          .resource(organizationToCreate)
-          .execute()
-          .getResource();
+      targetPractitioner = createNewPractitioner(receivedPractitioner, importRequest, first);
     }
+    return targetPractitioner;
+  }
+
+  private Practitioner createNewPractitioner(Practitioner receivedPractitioner, ImportRequest importRequest, Optional<Identifier> first) {
+    Practitioner targetPractitioner;
+    List<Identifier> identifiers = new ArrayList<>();
+    if (first.isPresent()) {
+      identifiers.add(first.get());
+    }
+    identifiers.add(new Identifier().setSystem(importRequest.getReceivedSystem())
+        .setValue(receivedPractitioner.getId()));
+    Practitioner organizationToCreate = new Practitioner().setIdentifier(identifiers);
+    targetPractitioner = (Practitioner) importRequest.getTargetClient()
+        .create()
+        .resource(organizationToCreate)
+        .execute()
+        .getResource();
     return targetPractitioner;
   }
 
