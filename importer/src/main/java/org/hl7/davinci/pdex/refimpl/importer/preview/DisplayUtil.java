@@ -1,28 +1,32 @@
-package org.hl7.davinci.pdex.refimpl.payer2payer.payerb.fhir;
+package org.hl7.davinci.pdex.refimpl.importer.preview;
 
 import ca.uhn.fhir.model.api.IResource;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.util.XmlUtil;
-import java.util.List;
-import javax.xml.stream.events.Characters;
-import javax.xml.stream.events.XMLEvent;
 import lombok.experimental.UtilityClass;
 import org.hl7.fhir.instance.model.api.IDomainResource;
 import org.hl7.fhir.r4.model.Resource;
 
-@UtilityClass
-public class DisplayUtil {
+import javax.xml.stream.events.Characters;
+import javax.xml.stream.events.XMLEvent;
+import java.util.List;
 
-  public String getDisplay(Resource theResource) {
+@UtilityClass
+class DisplayUtil {
+
+  String getDisplay(Resource theResource) {
     StringBuilder stringBuilder = new StringBuilder();
     if (theResource instanceof IResource) {
       IResource resource = (IResource) theResource;
-      parseDiv(stringBuilder, resource.getText().getDiv().getValue());
+      parseDiv(stringBuilder, resource.getText()
+          .getDiv()
+          .getValue());
       //IMPORTANT IDomainResource from package org.hl7.fhir.instance.model.api
     } else if (theResource instanceof IDomainResource) {
       IDomainResource resource = (IDomainResource) theResource;
       try {
-        parseDiv(stringBuilder, resource.getText().getDivAsString());
+        parseDiv(stringBuilder, resource.getText()
+            .getDivAsString());
       } catch (Exception e) {
         throw new DataFormatException("Unable to convert DIV to string", e);
       }
@@ -36,7 +40,8 @@ public class DisplayUtil {
       for (XMLEvent next : xmlEvents) {
         if (next.isCharacters()) {
           Characters characters = next.asCharacters();
-          builder.append(characters.getData()).append(" ");
+          builder.append(characters.getData())
+              .append(" ");
         }
       }
     }

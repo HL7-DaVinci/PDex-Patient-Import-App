@@ -53,7 +53,7 @@ public class ContextController {
     Optional<CoverageResponseDto> coverage = currentContextDetails.getCoverages().stream().filter(
         cov -> cov.getId().equals(coverageId)).findFirst();
     if (coverage.isPresent()) {
-      session.setAttribute("subscriber-id", coverage.get().getSubscriberId());
+      session.setAttribute("subscriber-id", coverage.get().getSubscriber());
     } else {
       throw new IllegalArgumentException("Wrong coverage id");
     }
@@ -65,7 +65,7 @@ public class ContextController {
       @RequestParam("state") String state,
       HttpSession session
   ) throws URISyntaxException {
-    //todo validate state
+    //tip: don't forget to validate state in real world app
     ResponseEntity<Oath2Token> tokenResponse = payerAService.getPayerAToken(code);
     session.setAttribute("history-token", tokenResponse.getBody());
 
