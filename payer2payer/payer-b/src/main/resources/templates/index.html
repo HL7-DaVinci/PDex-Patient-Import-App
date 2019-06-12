@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 
 <head>
 	<meta charset="utf-8">
@@ -42,7 +42,7 @@
 			label-width="120px"
 		>
 
-			<el-form-item label="Patient">
+			<el-form-item label="Patient"> <!-- todo show smth better when there are no patient selected -->
 				<el-input v-model="context.patient.name" :readonly="true"></el-input>
 			</el-form-item>
 
@@ -110,6 +110,16 @@
 
 	</el-container>
 
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		var baseAuthUrl = /*[[${payerAAuthUrl}]]*/ '';
+		var payerAClientId = /*[[${payerAClientId}]]*/ '';
+		var redirectUri = /*[[${redirectUri}]]*/ '';
+		var state = /*[[${state}]]*/ '';
+		var aud = /*[[${aud}]]*/ '';
+		/*]]>*/
+	</script>
+
 	<script>
 		Vue.use(VueRouter);
 		ELEMENT.locale(ELEMENT.lang.en);
@@ -164,8 +174,7 @@
 						if (!valid) {
 							return false;
 						}
-
-						window.location.href = "https://authorization.sandboxcerner.com/tenants/0b8a0111-e8e6-4c26-a91c-5069cbc6b1ca/protocols/oauth2/profiles/smart-v1/personas/provider/authorize?response_type=code&client_id=10446dd9-c634-43d0-bcfa-a841a4f04a16&redirect_uri=https://payer-b-smart-app.herokuapp.com/importhistory&state=w9FIr7yy8mB36dsdcoy70gNoLeubz1qrz&aud=https://fhir-ehr.sandboxcerner.com/r4/0b8a0111-e8e6-4c26-a91c-5069cbc6b1ca&scope=user%2FPatient.read%20user%2FPatient.write%20user%2FEncounter.read%20user%2FProcedure.read%20user%2FMedicationDispense.read%20user%2FAllergyIntolerance.read%20online_access%20openid%20profile";
+						window.location.href = baseAuthUrl+ "?response_type=code&client_id="+payerAClientId+"&redirect_uri="+redirectUri+"&state="+state+"&aud="+aud;
 					});
 				}
 			}
@@ -213,7 +222,7 @@
 								{
 									confirmButtonText: 'OK',
 									callback: action => {
-										router.push("/");
+									window.location.href =  "/launch";
 									}
 								});
 					}).catch(error => {

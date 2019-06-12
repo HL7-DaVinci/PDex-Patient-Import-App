@@ -2,15 +2,26 @@ plugins {
     id 'org.springframework.boot' version '2.1.4.RELEASE'
 }
 
+configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+}
+
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter-web:2.1.4.RELEASE'
+    compile 'org.springframework.boot:spring-boot-starter-thymeleaf:2.1.4.RELEASE'
     compile 'org.springframework.boot:spring-boot-starter-security:2.1.4.RELEASE'
     compile 'org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.1.4.RELEASE'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools:2.1.4.RELEASE'
     
     compile 'ca.uhn.hapi.fhir:hapi-fhir-structures-r4:3.7.0'
     compile 'ca.uhn.hapi.fhir:hapi-fhir-client:3.7.0'
     
     compile project(':cds-hooks-model')
+    compile project(':importer')
     
     testCompile 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
 }

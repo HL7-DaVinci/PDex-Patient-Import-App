@@ -37,7 +37,7 @@ public class CurrentContextResponseDto {
 
     //SET PATIENT
     this.patient = new PatientResponseDto();
-    this.patient.setId(patient.getIdElement().getIdPart());
+    this.patient.setId(patient.getId());
     this.patient.setName(Optional.ofNullable(patient.getNameFirstRep()).map(HumanName::getNameAsSingleString)
         .orElse(null));
     this.patient.setGender(Optional.ofNullable(patient.getGender()).map(AdministrativeGender::getDisplay).orElse(null));
@@ -51,8 +51,8 @@ public class CurrentContextResponseDto {
     //SET COVERAGES - ONLY FIRST PAYOR IS RESOLVED
     this.coverages = coverages.stream().map(coverage -> {
       CoverageResponseDto c = new CoverageResponseDto();
-      c.setId(coverage.getIdElement().getIdPart());
-      c.setSubscriberId(coverage.getSubscriberId());
+      c.setId(coverage.getId());
+      c.setSubscriber(coverage.getSubscriberId());
       IBaseResource payor = Optional.ofNullable(coverage.getPayorFirstRep()).map(Reference::getResource).orElse(null);
       c.setPayorName(Optional.ofNullable(payor).map(res -> {
         String name;
@@ -93,7 +93,7 @@ public class CurrentContextResponseDto {
   public static class CoverageResponseDto {
 
     private String id;
-    private String subscriberId;
+    private String subscriber;
     private String payorName;
   }
 }
