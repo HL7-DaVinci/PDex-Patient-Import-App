@@ -3,7 +3,7 @@ package org.hl7.davinci.pdex.refimpl.importer;
 public interface Importer {
 
   /**
-   *  This is module for demo purpose and it is configured to wotk with Patient/$everything
+   *  This is module for demo purpose and it is configured to work with Patient/$everything
    *  Target system Configuration is stored in @{{@link TargetConfiguration} class.
    *  Source system configuration is passed as argument in {@link ImportRequest}
    *
