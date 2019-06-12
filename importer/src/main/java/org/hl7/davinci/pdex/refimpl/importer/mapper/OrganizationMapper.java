@@ -29,7 +29,7 @@ class OrganizationMapper {
       resource = importRequest.getReceivedClient()
           .read()
           .resource(Organization.class)
-          .withId(receivedOrganizationRef.getId())
+          .withId(receivedOrganizationRef.getReference())
           .execute();
     }
     return readOrCreate(resource, importRequest);
