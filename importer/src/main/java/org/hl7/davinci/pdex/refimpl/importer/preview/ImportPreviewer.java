@@ -5,6 +5,8 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Parameters;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,50 +15,56 @@ import java.util.Set;
 
 public class ImportPreviewer {
 
-    public Map<Class<? extends Resource>, Set<ImportRecordDto>> getRecordsForImport(
-            PreviewRequest previewRequest
-    ) {
+  private Logger logger = LoggerFactory.getLogger(ImportPreviewer.class);
 
-        Parameters outParams = previewRequest.getClient()
-                .operation()
-                .onInstance(new IdDt(previewRequest.getSubscriberId()))
-                .named("$everything")
-                .withNoParameters(Parameters.class)
-                .execute();
+  public Map<Class<? extends Resource>, Set<ImportRecordDto>> getRecordsForImport(PreviewRequest previewRequest) {
 
-        Bundle firstPage = (Bundle) outParams.getParameterFirstRep().getResource();
-        Patient patient = (Patient) firstPage.getEntryFirstRep().getResource();
+    Parameters outParams = previewRequest.getClient()
+        .operation()
+        .onInstance(new IdDt(previewRequest.getSubscriberId()))
+        .named("$everything")
+        .withNoParameters(Parameters.class)
+        .execute();
 
-        Map<Class<? extends Resource>, Set<ImportRecordDto>> importRecords = new HashMap<>();
+    Bundle firstPage = (Bundle) outParams.getParameterFirstRep()
+        .getResource();
+    Patient patient = (Patient) firstPage.getEntryFirstRep()
+        .getResource();
 
-        Bundle page = firstPage;
-        while (page != null) {
+    Map<Class<? extends Resource>, Set<ImportRecordDto>> importRecords = new HashMap<>();
 
-            for (Bundle.BundleEntryComponent bc : page.getEntry()) {
-                Resource r = bc.getResource();
-                if (r == patient) {
-                    continue;
-                }
-                Set<ImportRecordDto> importRecordDtos = importRecords.computeIfAbsent(r.getClass(), k -> new HashSet<>());
-                importRecordDtos.add(new ImportRecordDto(r.getIdElement().getIdPart(), DisplayUtil.getDisplay(r)));
-            }
+    Bundle page = firstPage;
+    while (page != null) {
+      String message = page.getLink(Bundle.LINK_NEXT) != null ? page.getLink(Bundle.LINK_NEXT)
+          .getUrl() : " none";
+      logger.info("Page loaded, next = " + message);
 
-            page = loadNextPage(page, previewRequest);
-            System.out.println("Page preloaded, next = " + page.getLink(Bundle.LINK_NEXT) );
+      for (Bundle.BundleEntryComponent bc : page.getEntry()) {
+        Resource r = bc.getResource();
+        if (r == patient) {
+          continue;
         }
-        return importRecords;
-    }
+        Set<ImportRecordDto> importRecordDtos = importRecords.computeIfAbsent(r.getClass(), k -> new HashSet<>());
+        importRecordDtos.add(new ImportRecordDto(r.getIdElement()
+            .getIdPart(), DisplayUtil.getDisplay(r)));
+      }
 
-    private Bundle loadNextPage(Bundle page, PreviewRequest previewRequest) {
-        if (page.getLink(Bundle.LINK_NEXT) != null) {
-            page = previewRequest.getClient()
-                    .loadPage()
-                    .next(page)
-                    .execute();
-        } else {
-            page = null;
-        }
-        return page;
+      page = loadNextPage(page, previewRequest);
     }
+    return importRecords;
+  }
+
+  private Bundle loadNextPage(Bundle page, PreviewRequest previewRequest) {
+    Bundle newPage;
+    if (page.getLink(Bundle.LINK_NEXT) != null) {
+      newPage = previewRequest.getClient()
+          .loadPage()
+          .next(page)
+          .execute();
+    } else {
+      newPage = null;
+    }
+    return newPage;
+  }
 
 }

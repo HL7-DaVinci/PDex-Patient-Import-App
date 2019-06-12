@@ -15,20 +15,23 @@ class PractitionerMapper {
 
   private TargetConfiguration targetConfiguration;
 
-  public PractitionerMapper(TargetConfiguration targetConfiguration) {
+  PractitionerMapper(TargetConfiguration targetConfiguration) {
     this.targetConfiguration = targetConfiguration;
   }
 
-  public Practitioner readOrCreate(Reference practitioner, ImportRequest importRequest) {
-    Practitioner readPractitioner = importRequest.getReceivedClient()
-        .read()
-        .resource(Practitioner.class)
-        .withId(practitioner.getReference())
-        .execute();
-    return readOrCreate(readPractitioner, importRequest);
+  Practitioner readOrCreate(Reference practitioner, ImportRequest importRequest) {
+    Practitioner practitionerResource = (Practitioner) practitioner.getResource();
+    if (practitionerResource == null) {
+      practitionerResource = importRequest.getReceivedClient()
+          .read()
+          .resource(Practitioner.class)
+          .withId(practitioner.getReference())
+          .execute();
+    }
+    return readOrCreate(practitionerResource, importRequest);
   }
 
-  public Practitioner readOrCreate(Practitioner receivedPractitioner, ImportRequest importRequest) {
+  Practitioner readOrCreate(Practitioner receivedPractitioner, ImportRequest importRequest) {
     Optional<Identifier> first = receivedPractitioner.getIdentifier()
         .stream()
         .filter(identifier -> targetConfiguration.getNpiSystem()
@@ -39,7 +42,7 @@ class PractitionerMapper {
     if (first.isPresent()) {
       targetPractitioner = findByNPI(importRequest, first.get());
     } else {
-      targetPractitioner = findByReceivedIdentifier(getReceivedIdentifier(receivedPractitioner), importRequest);
+      targetPractitioner = findByReceivedIdentifier(receivedPractitioner.getId(), importRequest);
     }
     if (targetPractitioner == null) {
       targetPractitioner = createNewPractitioner(receivedPractitioner, importRequest, first);
@@ -47,7 +50,8 @@ class PractitionerMapper {
     return targetPractitioner;
   }
 
-  private Practitioner createNewPractitioner(Practitioner receivedPractitioner, ImportRequest importRequest, Optional<Identifier> first) {
+  private Practitioner createNewPractitioner(Practitioner receivedPractitioner, ImportRequest importRequest,
+      Optional<Identifier> first) {
     Practitioner targetPractitioner;
     List<Identifier> identifiers = new ArrayList<>();
     if (first.isPresent()) {
@@ -62,10 +66,6 @@ class PractitionerMapper {
         .execute()
         .getResource();
     return targetPractitioner;
-  }
-
-  private String getReceivedIdentifier(Practitioner receivedPractitioner) {
-    return receivedPractitioner.getId();//todo probably this should look at Identifiers
   }
 
   private Practitioner findByReceivedIdentifier(String receivedPractitionerId, ImportRequest importRequest) {

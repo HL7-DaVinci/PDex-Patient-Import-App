@@ -6,39 +6,31 @@ import org.hl7.fhir.r4.model.Patient;
 
 import java.util.List;
 
-//todo use again
-class IdentifierMapper {
+public class IdentifierMapper {
 
-  IGenericClient aClient;
-  IGenericClient bClient;
+  private IGenericClient targetClient;
 
-  IdentifierMapper(IGenericClient aClient, IGenericClient bClient) {
-    this.aClient = aClient;
-    this.bClient = bClient;
+  public IdentifierMapper(IGenericClient targetClient) {
+    this.targetClient = targetClient;
   }
 
-  void importNewIdentifiers(String patientId, String subscriberId) {
-    Patient payerBPatient = bClient.read()
+  public void importNewIdentifiers(String patientId, Patient receivedPatient) {
+    Patient targetPatient = targetClient.read()
         .resource(Patient.class)
         .withId(patientId)
         .execute();
-    List<Identifier> bIdentifiers = payerBPatient.getIdentifier();
+    List<Identifier> targetIdentifiers = targetPatient.getIdentifier();
 
-    Patient payerAPatient = aClient.read()
-        .resource(Patient.class)
-        .withId(subscriberId)
-        .execute();
-
-    for (Identifier aIdentifier : payerAPatient.getIdentifier()) {
-      if (bIdentifiers.stream()
+    for (Identifier receivedIdentifier : receivedPatient.getIdentifier()) {
+      if (targetIdentifiers.stream()
           .noneMatch(identifier -> identifier.getSystem()
-              .equals(aIdentifier.getSystem()))) {
-        bIdentifiers.add(aIdentifier);
+              .equals(receivedIdentifier.getSystem()))) {
+        targetIdentifiers.add(receivedIdentifier);
       }
     }
 
-    bClient.update()
-        .resource(payerBPatient)
+    targetClient.update()
+        .resource(targetPatient)
         .execute();
   }
 

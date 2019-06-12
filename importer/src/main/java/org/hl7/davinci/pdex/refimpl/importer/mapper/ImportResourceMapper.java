@@ -1,5 +1,6 @@
 package org.hl7.davinci.pdex.refimpl.importer.mapper;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.hl7.davinci.pdex.refimpl.importer.ImportRequest;
 import org.hl7.davinci.pdex.refimpl.importer.TargetConfiguration;
 import org.hl7.fhir.r4.model.Coverage;
@@ -48,8 +49,7 @@ public class ImportResourceMapper {
     } else if (resource.getClass() == MedicationRequest.class) {
       ((MedicationRequest) resource).setSubject(patientRef);
     } else {
-      System.out.println("Mapping references not supported for type" + resource.getClass());
-      //throw new NotImplementedException("Setting Patient reference not supported for type " + resource.getClass());
+      throw new NotImplementedException(" Mapping references not supported for type  " + resource.getClass());
     }
   }
 
@@ -77,19 +77,25 @@ public class ImportResourceMapper {
   private void mapEncounter(Encounter resource, ImportRequest importRequest, Reference patientRef) {
     resource.setSubject(patientRef);
     resource.getParticipant()
-        .forEach(loc ->  {
-          Reference individual = loc.getIndividual();
-          loc.setIndividual(new Reference(practitionerMapper.readOrCreate(individual,importRequest)));
+        .forEach(loc -> {
+          Reference individualComponent = loc.getIndividual();
+          if (individualComponent.getReference() != null) {
+            loc.setIndividual(new Reference(practitionerMapper.readOrCreate(individualComponent, importRequest)));
+          }
         });
 
     resource.getLocation()
-        .forEach(loc -> {
-          Reference receivedLocation = loc.getLocation();
-          loc.setLocation(new Reference(locationMapper.readOrCreate(receivedLocation, importRequest)));
+        .forEach(locComponent -> {
+          Reference receivedLocation = locComponent.getLocation();
+          if (receivedLocation.getReference() != null) {
+            locComponent.setLocation(new Reference(locationMapper.readOrCreate(receivedLocation, importRequest)));
+          }
         });
 
-    resource.setServiceProvider(
-        new Reference(organizationMapper.readOrCreate(resource.getServiceProvider(), importRequest)));
+    Reference serviceProvider = resource.getServiceProvider();
+    if (serviceProvider.getReference() != null) {
+      resource.setServiceProvider(new Reference(organizationMapper.readOrCreate(serviceProvider, importRequest)));
+    }
   }
 
   private void mapProcedure(Procedure resource, Reference patientRef) {

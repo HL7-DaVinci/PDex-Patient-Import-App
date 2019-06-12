@@ -65,7 +65,7 @@ public class ContextController {
       @RequestParam("state") String state,
       HttpSession session
   ) throws URISyntaxException {
-    //todo validate state
+    //tip: don't forget to validate state in real world app
     ResponseEntity<Oath2Token> tokenResponse = payerAService.getPayerAToken(code);
     session.setAttribute("history-token", tokenResponse.getBody());
 

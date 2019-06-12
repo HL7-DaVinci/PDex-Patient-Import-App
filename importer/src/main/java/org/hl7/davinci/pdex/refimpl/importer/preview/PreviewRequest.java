@@ -8,7 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PreviewRequest {
 
-    private final IGenericClient client;
-    private final String subscriberId;
+  private final IGenericClient client;
+  private final String subscriberId;
 
 }
