@@ -3,9 +3,11 @@ package org.hl7.davinci.pdex.refimpl.importer.mapper;
 import org.apache.commons.lang3.NotImplementedException;
 import org.hl7.davinci.pdex.refimpl.importer.ImportRequest;
 import org.hl7.davinci.pdex.refimpl.importer.TargetConfiguration;
+import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Coverage;
 import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.Encounter;
+import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.MedicationDispense;
 import org.hl7.fhir.r4.model.MedicationRequest;
 import org.hl7.fhir.r4.model.Observation;
@@ -48,8 +50,12 @@ public class ImportResourceMapper {
       organizationMapper.readOrCreate((Organization) resource, importRequest);
     } else if (resource.getClass() == MedicationRequest.class) {
       ((MedicationRequest) resource).setSubject(patientRef);
+    } else if (resource.getClass() == Condition.class) {
+      ((Condition) resource).setSubject(patientRef);
+    } else if (resource.getClass() == ListResource.class) {
+      ((ListResource) resource).setSubject(patientRef);
     } else {
-      throw new NotImplementedException(" Mapping references not supported for type  " + resource.getClass());
+      throw new NotImplementedException("Mapping references not supported for type  " + resource.getClass());
     }
   }
 
