@@ -4,8 +4,8 @@ plugins {
 
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter-web:2.1.4.RELEASE'
-    compile 'ca.uhn.hapi.fhir:hapi-fhir-structures-r4:3.7.0'
-    compile 'ca.uhn.hapi.fhir:hapi-fhir-client:3.7.0'
+    compile 'ca.uhn.hapi.fhir:hapi-fhir-structures-r4:4.2.0'
+    compile 'ca.uhn.hapi.fhir:hapi-fhir-client:4.2.0'
     compile project(':cds-hooks-model')
     testCompile 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
 }
