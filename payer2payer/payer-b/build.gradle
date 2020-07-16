@@ -17,8 +17,8 @@ dependencies {
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools:2.1.4.RELEASE'
     
-    compile 'ca.uhn.hapi.fhir:hapi-fhir-structures-r4:3.7.0'
-    compile 'ca.uhn.hapi.fhir:hapi-fhir-client:3.7.0'
+    compile 'ca.uhn.hapi.fhir:hapi-fhir-structures-r4:4.2.0'
+    compile 'ca.uhn.hapi.fhir:hapi-fhir-client:4.2.0'
     
     compile project(':cds-hooks-model')
     compile project(':importer')
