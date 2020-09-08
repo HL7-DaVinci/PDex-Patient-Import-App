@@ -3,6 +3,7 @@ package org.hl7.davinci.pdex.refimpl.importer.simple;
 import ca.uhn.fhir.model.primitive.IdDt;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.hl7.davinci.pdex.refimpl.importer.ImportRequest;
 import org.hl7.davinci.pdex.refimpl.importer.Importer;
 import org.hl7.davinci.pdex.refimpl.importer.TargetConfiguration;
@@ -59,7 +60,12 @@ public class SimpleImporter implements Importer {
         if (resource == receivedPatient) {
           continue;
         }
-        mapper.mapResourceReferences(resource, importRequest);
+        try {
+          mapper.mapResourceReferences(resource, importRequest);
+        } catch (NotImplementedException exc) {
+          logger.error("Handling of resource " + resource.getClass()
+              .getName() + " is not implemented and it will be skipped.", exc);
+        }
 
         //Set id as null to create a new one on persist.
         resource.setId((String) null);
