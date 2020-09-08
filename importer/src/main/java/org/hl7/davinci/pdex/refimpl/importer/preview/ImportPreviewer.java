@@ -57,10 +57,16 @@ public class ImportPreviewer {
   private Bundle loadNextPage(Bundle page, PreviewRequest previewRequest) {
     Bundle newPage;
     if (page.getLink(Bundle.LINK_NEXT) != null) {
-      newPage = previewRequest.getClient()
-          .loadPage()
-          .next(page)
-          .execute();
+      try {
+        newPage = previewRequest.getClient()
+            .loadPage()
+            .next(page)
+            .execute();
+      } catch (Exception exc) {
+        logger.error("Exception occurred when requesting a page from a server. Will stop here. Not all records will be "
+            + "available in a result set.", exc);
+        newPage = null;
+      }
     } else {
       newPage = null;
     }

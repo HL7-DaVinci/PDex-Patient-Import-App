@@ -145,9 +145,15 @@ public class SimpleImporter implements Importer {
   private Bundle getNextPage(IGenericClient payerAClient, Bundle page) {
     Bundle newPage;
     if (page.getLink(Bundle.LINK_NEXT) != null) {
-      newPage = payerAClient.loadPage()
-          .next(page)
-          .execute();
+      try {
+        newPage = payerAClient.loadPage()
+            .next(page)
+            .execute();
+      } catch (Exception exc) {
+        logger.error("Exception occurred when requesting a page from a server. Will stop here. Not all records will be "
+            + "imported.", exc);
+        newPage = null;
+      }
     } else {
       newPage = null;
     }
