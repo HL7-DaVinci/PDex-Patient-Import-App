@@ -3,16 +3,9 @@ package org.hl7.davinci.pdex.refimpl.importer.mapper;
 import org.apache.commons.lang3.NotImplementedException;
 import org.hl7.davinci.pdex.refimpl.importer.ImportRequest;
 import org.hl7.davinci.pdex.refimpl.importer.TargetConfiguration;
-import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Coverage;
-import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.Encounter;
-import org.hl7.fhir.r4.model.ListResource;
-import org.hl7.fhir.r4.model.MedicationDispense;
-import org.hl7.fhir.r4.model.MedicationRequest;
-import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Organization;
-import org.hl7.fhir.r4.model.Procedure;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Resource;
 
@@ -34,27 +27,30 @@ public class ImportResourceMapper {
   //We mapOrganization only simple references, in real use case ALL references should be mapped
   public void mapResourceReferences(Resource resource, ImportRequest importRequest) {
     Reference patientRef = new Reference(importRequest.getPatientId());
-    if (resource.getClass() == Procedure.class) {
-      mapProcedure((Procedure) resource, patientRef);
-    } else if (resource.getClass() == Encounter.class) {
+    boolean refSet = false;
+    //Set subject if possible
+    if (resource.getNamedProperty(-1867885268, "subject", false) != null) {
+      resource.setProperty("subject", patientRef);
+      refSet = true;
+    }
+    //Set patient if possible
+    if (resource.getNamedProperty(-791418107, "patient", false) != null) {
+      resource.setProperty("patient", patientRef);
+      refSet = true;
+    }
+    //Custom mappings
+    if (resource.getClass() == Encounter.class) {
       mapEncounter((Encounter) resource, importRequest, patientRef);
-    } else if (resource.getClass() == MedicationDispense.class) {
-      mapMedicationDispense((MedicationDispense) resource, patientRef);
-    } else if (resource.getClass() == Observation.class) {
-      mapObservation((Observation) resource, patientRef);
-    } else if (resource.getClass() == DocumentReference.class) {
-      mapDocumentReference((DocumentReference) resource, patientRef);
+      refSet = true;
     } else if (resource.getClass() == Coverage.class) {
       mapCoverage((Coverage) resource, importRequest, patientRef);
+      refSet = true;
     } else if (resource.getClass() == Organization.class) {
       organizationMapper.readOrCreate((Organization) resource, importRequest);
-    } else if (resource.getClass() == MedicationRequest.class) {
-      ((MedicationRequest) resource).setSubject(patientRef);
-    } else if (resource.getClass() == Condition.class) {
-      ((Condition) resource).setSubject(patientRef);
-    } else if (resource.getClass() == ListResource.class) {
-      ((ListResource) resource).setSubject(patientRef);
-    } else {
+      refSet = true;
+    }
+
+    if (!refSet) {
       throw new NotImplementedException("Mapping references not supported for type  " + resource.getClass());
     }
   }
@@ -66,18 +62,6 @@ public class ImportResourceMapper {
       newReferences.add(new Reference(organizationMapper.readOrCreate(reference, importRequest)));
     }
     resource.setPayor(newReferences);
-  }
-
-  private void mapDocumentReference(DocumentReference resource, Reference patientRef) {
-    resource.setSubject(patientRef);
-  }
-
-  private void mapObservation(Observation resource, Reference patientRef) {
-    resource.setSubject(patientRef);
-  }
-
-  private void mapMedicationDispense(MedicationDispense resource, Reference patientRef) {
-    resource.setSubject(patientRef);
   }
 
   private void mapEncounter(Encounter resource, ImportRequest importRequest, Reference patientRef) {
@@ -102,10 +86,6 @@ public class ImportResourceMapper {
     if (serviceProvider.getReference() != null) {
       resource.setServiceProvider(new Reference(organizationMapper.readOrCreate(serviceProvider, importRequest)));
     }
-  }
-
-  private void mapProcedure(Procedure resource, Reference patientRef) {
-    resource.setSubject(patientRef);
   }
 
 }
