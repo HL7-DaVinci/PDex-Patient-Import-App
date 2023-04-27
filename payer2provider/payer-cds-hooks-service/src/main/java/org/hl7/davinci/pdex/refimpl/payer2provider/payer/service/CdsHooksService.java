@@ -102,8 +102,9 @@ public class CdsHooksService {
     Enumerations.AdministrativeGender gender = providerPatient.getGender();
     IQuery<IBaseBundle> matchingQuery = payerFhirClient.search().forResource(Patient.class).where(
         Patient.FAMILY.matches().values(familyNames)).and(Patient.GIVEN.matches().values(givenNames)).and(
-        Patient.GENDER.exactly().systemAndCode(gender.getSystem(), gender.toCode())).and(
-        Patient.BIRTHDATE.exactly().day(providerPatient.getBirthDate()));
+        Patient.GENDER.exactly().systemAndCode(gender.getSystem(), gender.toCode()))
+        //.and(Patient.BIRTHDATE.exactly().day(providerPatient.getBirthDate()))
+        ;
 
     Bundle results = matchingQuery.returnBundle(Bundle.class).execute();
     if (results.getEntry().isEmpty()) {

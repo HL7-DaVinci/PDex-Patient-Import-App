@@ -15,4 +15,9 @@ RUN mkdir /app
 COPY --from=build /home/gradle/src/payer2provider/payer-cds-hooks-service/build/libs/*.jar /app/service.jar
 ENTRYPOINT exec java $JAVA_OPTS -jar /app/service.jar
 
+FROM openjdk:8-jre-alpine AS payer-b
+EXPOSE 8082
+RUN mkdir /app
+COPY --from=build /home/gradle/src/payer2payer/payer-b/build/libs/*.jar /app/service.jar
+ENTRYPOINT exec java $JAVA_OPTS -jar /app/service.jar
 
